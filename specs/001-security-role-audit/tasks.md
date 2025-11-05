@@ -73,14 +73,14 @@ Independent Test: Invoke `GET /catalog/principals` and confirm completeness + in
 Goal: Per-agent allow/deny tool mapping and enforcement with classification checks.
 Independent Test: Remove a tool via PUT endpoint → subsequent simulated invocation denied.
 
-- [ ] T046 [US2] Implement `GET /authorization/agents/{agentId}/tools` handler `packages/agentcore-governance/src/agentcore_governance/api/authorization_handlers.py`
-- [ ] T047 [US2] Implement `PUT /authorization/agents/{agentId}/tools` handler `packages/agentcore-governance/src/agentcore_governance/api/authorization_handlers.py`
-- [ ] T048 [P] [US2] Implement in-memory mapping store (on-demand refresh) `packages/agentcore-governance/src/agentcore_governance/authorization.py`
-- [ ] T049 [US2] Implement classification enforcement (SENSITIVE requires approval record) `packages/agentcore-governance/src/agentcore_governance/classification.py`
-- [ ] T050 [US2] Add audit event for allow/deny decision `packages/agentcore-governance/src/agentcore_governance/evidence.py`
-- [ ] T051 [US2] Contract tests for GET/PUT tool authorization endpoints `tests/integration/governance/test_authorization_endpoints.py`
-- [ ] T052 [US2] Simulated invocation test verifying denied unauthorized tool `tests/integration/governance/test_tool_deny_flow.py`
-- [ ] T053 [US2] Add differential report for authorization mapping changes `packages/agentcore-governance/src/agentcore_governance/authorization.py`
+- [X] T046 [US2] Implement `GET /authorization/agents/{agentId}/tools` handler `packages/agentcore-governance/src/agentcore_governance/api/authorization_handlers.py`
+- [X] T047 [US2] Implement `PUT /authorization/agents/{agentId}/tools` handler `packages/agentcore-governance/src/agentcore_governance/api/authorization_handlers.py`
+- [X] T048 [P] [US2] Implement in-memory mapping store (on-demand refresh) `packages/agentcore-governance/src/agentcore_governance/authorization.py`
+- [X] T049 [US2] Implement classification enforcement (SENSITIVE requires approval record) `packages/agentcore-governance/src/agentcore_governance/classification.py`
+- [X] T050 [US2] Add audit event for allow/deny decision `packages/agentcore-governance/src/agentcore_governance/evidence.py`
+- [X] T051 [US2] Contract tests for GET/PUT tool authorization endpoints `tests/integration/governance/test_authorization_endpoints.py`
+- [X] T052 [US2] Simulated invocation test verifying denied unauthorized tool `tests/integration/governance/test_tool_deny_flow.py`
+- [X] T053 [US2] Add differential report for authorization mapping changes `packages/agentcore-governance/src/agentcore_governance/authorization.py`
 
 ---
 ## Phase 5: User Story 3 (Third-Party Integration Onboarding) [Priority P2]

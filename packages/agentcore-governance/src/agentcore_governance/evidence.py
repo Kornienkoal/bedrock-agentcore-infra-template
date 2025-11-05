@@ -141,3 +141,54 @@ def _compute_conformance_score(principals: list[dict[str, Any]]) -> float:
 
     scores = [p.get("least_privilege_score", 0.0) for p in principals]
     return sum(scores) / len(scores) if scores else 0.0
+
+
+def construct_authorization_decision_event(
+    agent_id: str,
+    tool_id: str,
+    effect: str,
+    reason: str,
+    correlation_id: str | None = None,
+    classification: str | None = None,
+) -> dict[str, Any]:
+    """Construct an authorization decision audit event.
+
+    Args:
+        agent_id: Agent attempting to use the tool
+        tool_id: Tool being accessed
+        effect: Decision effect ('allow' or 'deny')
+        reason: Explanation for the decision
+        correlation_id: Optional correlation ID for tracing
+        classification: Optional tool classification level
+
+    Returns:
+        Audit event dictionary with authorization decision details
+    """
+    event_id = str(uuid.uuid4())
+    correlation_id = correlation_id or str(uuid.uuid4())
+    timestamp = datetime.now(UTC).isoformat()
+
+    event = {
+        "id": event_id,
+        "event_type": "authorization_decision",
+        "timestamp": timestamp,
+        "correlation_id": correlation_id,
+        "agent_id": agent_id,
+        "tool_id": tool_id,
+        "effect": effect,
+        "reason": reason,
+        "classification": classification,
+    }
+
+    # Compute integrity hash
+    hash_fields = [
+        event_id,
+        timestamp,
+        agent_id,
+        tool_id,
+        effect,
+        reason or "",
+    ]
+    event["integrity_hash"] = integrity.compute_integrity_hash(hash_fields)
+
+    return event

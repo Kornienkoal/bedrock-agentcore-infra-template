@@ -119,3 +119,56 @@ def requires_approval(tool_id: str, registry: dict[str, Any] | None = None) -> b
         return False
 
     return tool.get("classification") == "SENSITIVE"
+
+
+def validate_tool_authorization(
+    tool_id: str,
+    approval_record: dict[str, Any] | None = None,
+    registry: dict[str, Any] | None = None,
+) -> tuple[bool, str]:
+    """Validate if a tool authorization is allowed based on classification.
+
+    Args:
+        tool_id: Tool identifier
+        approval_record: Optional approval record for SENSITIVE tools
+        registry: Optional pre-loaded classification registry
+
+    Returns:
+        Tuple of (is_authorized, reason)
+    """
+    tool = get_tool_classification(tool_id, registry)
+
+    # Unknown tools are denied by default
+    if not tool:
+        return False, f"Tool '{tool_id}' not found in classification registry"
+
+    classification = tool.get("classification", "LOW")
+
+    # LOW and MODERATE tools don't require approval
+    if classification in ("LOW", "MODERATE"):
+        return True, f"Tool classification '{classification}' does not require approval"
+
+    # SENSITIVE tools require approval record
+    if classification == "SENSITIVE":
+        if not approval_record:
+            return (
+                False,
+                f"Tool '{tool_id}' is SENSITIVE and requires approval record",
+            )
+
+        # Validate approval record structure
+        if not isinstance(approval_record, dict):
+            return False, "Invalid approval record format"
+
+        required_fields = ["approved_by", "approved_at"]
+        missing_fields = [f for f in required_fields if f not in approval_record]
+
+        if missing_fields:
+            return (
+                False,
+                f"Approval record missing required fields: {', '.join(missing_fields)}",
+            )
+
+        return True, f"Tool '{tool_id}' authorized with valid approval"
+
+    return False, f"Unknown classification: {classification}"
