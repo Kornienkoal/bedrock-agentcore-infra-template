@@ -34,9 +34,11 @@ class TestLoadToolClassifications:
 
     def test_load_valid_registry(self, sample_registry_yaml):
         """Test loading a valid classification registry."""
-        with patch("builtins.open", mock_open(read_data=sample_registry_yaml)):
-            with patch("pathlib.Path.exists", return_value=True):
-                registry = classification.load_tool_classifications()
+        with (
+            patch("builtins.open", mock_open(read_data=sample_registry_yaml)),
+            patch("pathlib.Path.exists", return_value=True),
+        ):
+            registry = classification.load_tool_classifications()
 
         assert "tools" in registry
         assert len(registry["tools"]) == 2
@@ -54,19 +56,23 @@ class TestLoadToolClassifications:
         """Test handling of malformed YAML."""
         invalid_yaml = "invalid: yaml: content: [unclosed"
 
-        with patch("builtins.open", mock_open(read_data=invalid_yaml)):
-            with patch("pathlib.Path.exists", return_value=True):
-                with pytest.raises(yaml.YAMLError):
-                    classification.load_tool_classifications()
+        with (
+            patch("builtins.open", mock_open(read_data=invalid_yaml)),
+            patch("pathlib.Path.exists", return_value=True),
+            pytest.raises(yaml.YAMLError),
+        ):
+            classification.load_tool_classifications()
 
     def test_load_invalid_structure(self):
         """Test handling of invalid registry structure."""
         invalid_registry = "tools: not_a_list"
 
-        with patch("builtins.open", mock_open(read_data=invalid_registry)):
-            with patch("pathlib.Path.exists", return_value=True):
-                with pytest.raises(ValueError, match="'tools' must be a list"):
-                    classification.load_tool_classifications()
+        with (
+            patch("builtins.open", mock_open(read_data=invalid_registry)),
+            patch("pathlib.Path.exists", return_value=True),
+            pytest.raises(ValueError, match="'tools' must be a list"),
+        ):
+            classification.load_tool_classifications()
 
 
 class TestValidateToolEntry:

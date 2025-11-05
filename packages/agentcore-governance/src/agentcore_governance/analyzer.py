@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterable, Mapping
+from typing import Any, cast
 
 logger = logging.getLogger(__name__)
 
@@ -35,13 +36,14 @@ def compute_least_privilege_score(policy_documents: Iterable[Mapping[str, object
             statements = [statements]
 
         for stmt in statements:
-            if stmt.get("Effect") != "Allow":
+            stmt_dict = cast(dict[str, Any], stmt)
+            if stmt_dict.get("Effect") != "Allow":
                 continue
 
             total_statements += 1
 
             # Check actions for wildcards
-            actions = stmt.get("Action", [])
+            actions = stmt_dict.get("Action", [])
             if isinstance(actions, str):
                 actions = [actions]
 
@@ -50,7 +52,7 @@ def compute_least_privilege_score(policy_documents: Iterable[Mapping[str, object
                     wildcard_action_count += 1
 
             # Check resource scope
-            resources = stmt.get("Resource", [])
+            resources = stmt_dict.get("Resource", [])
             if isinstance(resources, str):
                 resources = [resources]
 

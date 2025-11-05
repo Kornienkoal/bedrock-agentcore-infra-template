@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Iterable, Mapping, MutableMapping
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, cast
 
 import boto3
 from botocore.exceptions import ClientError
@@ -103,7 +103,7 @@ def _extract_last_used(role: dict[str, Any]) -> str | None:
     if role_last_used and "LastUsedDate" in role_last_used:
         last_used_date = role_last_used["LastUsedDate"]
         if hasattr(last_used_date, "isoformat"):
-            return last_used_date.isoformat()
+            return str(last_used_date.isoformat())
     return None
 
 
@@ -130,11 +130,12 @@ def summarize_policy_footprint(
 
         for stmt in statements:
             total_statements += 1
-            if stmt.get("Effect") != "Allow":
+            stmt_dict = cast(dict[str, Any], stmt)
+            if stmt_dict.get("Effect") != "Allow":
                 continue
 
             # Extract actions
-            actions = stmt.get("Action", [])
+            actions = stmt_dict.get("Action", [])
             if isinstance(actions, str):
                 actions = [actions]
 
@@ -144,7 +145,7 @@ def summarize_policy_footprint(
                     wildcard_actions.append(action)
 
             # Check resource scope
-            resources = stmt.get("Resource", [])
+            resources = stmt_dict.get("Resource", [])
             if isinstance(resources, str):
                 resources = [resources]
             if any(r == "*" for r in resources):
