@@ -196,3 +196,34 @@ def flag_inactive_principals(
             principal["inactive"] = True
 
     return principals
+
+
+def export_catalog_snapshot(
+    environment: str | None = None,
+    include_metadata: bool = True,
+) -> dict[str, Any]:
+    """Export complete catalog snapshot as JSON-serializable dictionary.
+
+    Args:
+        environment: Optional environment filter
+        include_metadata: Include snapshot metadata (timestamp, filters)
+
+    Returns:
+        Dictionary with principals array and optional metadata
+    """
+    principals = fetch_principal_catalog(environments=[environment] if environment else None)
+    principals = flag_inactive_principals(principals)
+
+    snapshot: dict[str, Any] = {
+        "principals": principals,
+    }
+
+    if include_metadata:
+        snapshot["metadata"] = {
+            "timestamp": datetime.now(UTC).isoformat(),
+            "environment": environment,
+            "total_count": len(principals),
+            "inactive_count": sum(1 for p in principals if p.get("inactive", False)),
+        }
+
+    return snapshot

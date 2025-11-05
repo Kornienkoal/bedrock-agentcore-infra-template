@@ -58,14 +58,14 @@ Purpose: Implement core shared services required by all user stories (catalog ag
 Goal: Deliver inventory catalog endpoint and inactivity flagging.
 Independent Test: Invoke `GET /catalog/principals` and confirm completeness + inactivity flag.
 
-- [ ] T038 [US1] Implement `GET /catalog/principals` handler `packages/agentcore-governance/src/agentcore_governance/api/catalog_handlers.py`
-- [ ] T039 [P] [US1] Implement inactivity flagging logic (last_used > 30d) `packages/agentcore-governance/src/agentcore_governance/catalog.py`
-- [ ] T040 [US1] Add risk rating computation (wildcards + unused actions) `packages/agentcore-governance/src/agentcore_governance/analyzer.py`
-- [ ] T041 [US1] Add pagination support for principals list `packages/agentcore-governance/src/agentcore_governance/api/catalog_handlers.py`
-- [ ] T042 [US1] Contract test for `/catalog/principals` response schema `tests/integration/governance/test_catalog_endpoint.py`
-- [ ] T043 [US1] Add ownership tag validation & fallback labeling `packages/agentcore-governance/src/agentcore_governance/catalog.py`
-- [ ] T044 [US1] Add export snapshot (JSON) function `packages/agentcore-governance/src/agentcore_governance/catalog.py`
-- [ ] T045 [US1] Integration test for inactivity & risk flags `tests/integration/governance/test_catalog_flags.py`
+- [X] T038 [US1] Implement `GET /catalog/principals` handler `packages/agentcore-governance/src/agentcore_governance/api/catalog_handlers.py`
+- [X] T039 [P] [US1] Implement inactivity flagging logic (last_used > 30d) `packages/agentcore-governance/src/agentcore_governance/catalog.py`
+- [X] T040 [US1] Add risk rating computation (wildcards + unused actions) `packages/agentcore-governance/src/agentcore_governance/analyzer.py`
+- [X] T041 [US1] Add pagination support for principals list `packages/agentcore-governance/src/agentcore_governance/api/catalog_handlers.py`
+- [X] T042 [US1] Contract test for `/catalog/principals` response schema `tests/integration/governance/test_catalog_endpoint.py`
+- [X] T043 [US1] Add ownership tag validation & fallback labeling `packages/agentcore-governance/src/agentcore_governance/catalog.py`
+- [X] T044 [US1] Add export snapshot (JSON) function `packages/agentcore-governance/src/agentcore_governance/catalog.py`
+- [X] T045 [US1] Integration test for inactivity & risk flags `tests/integration/governance/test_catalog_flags.py`
 
 ---
 ## Phase 4: User Story 2 (Tool Access Governance) [Priority P1]
