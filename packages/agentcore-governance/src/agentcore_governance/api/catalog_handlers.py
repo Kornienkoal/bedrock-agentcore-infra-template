@@ -54,7 +54,9 @@ def get_principals(
                 principal["resource_scope_wideness"] = policy_summary.get(
                     "resource_scope_wideness", "NARROW"
                 )
-                principal["least_privilege_score"] = policy_summary.get("least_privilege_score", 100.0)
+                principal["least_privilege_score"] = policy_summary.get(
+                    "least_privilege_score", 100.0
+                )
 
             # Compute risk rating
             principal["risk_rating"] = analyzer.compute_risk_rating(principal)

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
-
 from agentcore_governance import authorization
 from agentcore_governance.api import authorization_handlers
 
@@ -130,7 +128,10 @@ class TestToolDenyFlow:
         sensitive_tool = "sensitive-db-access"
 
         # Try to authorize SENSITIVE tool without approval
-        with patch("agentcore_governance.classification.load_tool_classifications", return_value=mock_registry):
+        with patch(
+            "agentcore_governance.classification.load_tool_classifications",
+            return_value=mock_registry,
+        ):
             response = authorization_handlers.update_agent_tools(
                 agent_id,
                 [sensitive_tool],

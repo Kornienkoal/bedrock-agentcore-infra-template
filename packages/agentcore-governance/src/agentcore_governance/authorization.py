@@ -74,8 +74,7 @@ def set_authorized_tools(
     _authorization_history[agent_id].append(change_record)
 
     logger.info(
-        f"Authorization updated for {agent_id}: "
-        f"+{len(added)} -{len(removed)} ={len(unchanged)}"
+        f"Authorization updated for {agent_id}: +{len(added)} -{len(removed)} ={len(unchanged)}"
     )
 
     return change_record

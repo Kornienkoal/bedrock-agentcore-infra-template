@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
-
 from agentcore_governance.api import catalog_handlers
 
 
@@ -60,7 +58,9 @@ class TestGetPrincipalsEndpoint:
             }
         ]
 
-        with patch("agentcore_governance.catalog.fetch_principal_catalog", return_value=mock_principals):
+        with patch(
+            "agentcore_governance.catalog.fetch_principal_catalog", return_value=mock_principals
+        ):
             response = catalog_handlers.get_principals()
 
         principals = response["principals"]
@@ -92,7 +92,9 @@ class TestGetPrincipalsEndpoint:
             {"id": "role-2", "owner": "team-b", "last_used_at": "2024-11-01T00:00:00Z"},
         ]
 
-        with patch("agentcore_governance.catalog.fetch_principal_catalog", return_value=mock_principals):
+        with patch(
+            "agentcore_governance.catalog.fetch_principal_catalog", return_value=mock_principals
+        ):
             response = catalog_handlers.get_principals(owner="team-a")
 
         assert response["filters"]["owner"] == "team-a"
@@ -101,9 +103,14 @@ class TestGetPrincipalsEndpoint:
 
     def test_pagination_page_boundaries(self):
         """Test pagination with multiple pages."""
-        mock_principals = [{"id": f"role-{i}", "owner": "team", "last_used_at": "2024-11-01T00:00:00Z"} for i in range(150)]
+        mock_principals = [
+            {"id": f"role-{i}", "owner": "team", "last_used_at": "2024-11-01T00:00:00Z"}
+            for i in range(150)
+        ]
 
-        with patch("agentcore_governance.catalog.fetch_principal_catalog", return_value=mock_principals):
+        with patch(
+            "agentcore_governance.catalog.fetch_principal_catalog", return_value=mock_principals
+        ):
             # Page 1
             response_p1 = catalog_handlers.get_principals(page=1, page_size=100)
             assert response_p1["pagination"]["page"] == 1
@@ -123,10 +130,17 @@ class TestGetPrincipalsEndpoint:
         """Test that ownership validation adds fallback labels."""
         mock_principals = [
             {"id": "role-1", "owner": "", "purpose": "", "last_used_at": "2024-11-01T00:00:00Z"},
-            {"id": "role-2", "owner": "unknown", "purpose": "Valid purpose", "last_used_at": "2024-11-01T00:00:00Z"},
+            {
+                "id": "role-2",
+                "owner": "unknown",
+                "purpose": "Valid purpose",
+                "last_used_at": "2024-11-01T00:00:00Z",
+            },
         ]
 
-        with patch("agentcore_governance.catalog.fetch_principal_catalog", return_value=mock_principals):
+        with patch(
+            "agentcore_governance.catalog.fetch_principal_catalog", return_value=mock_principals
+        ):
             response = catalog_handlers.get_principals()
 
         principals = response["principals"]
@@ -141,7 +155,10 @@ class TestGetPrincipalsEndpoint:
 
     def test_error_handling(self):
         """Test error handling returns proper error structure."""
-        with patch("agentcore_governance.catalog.fetch_principal_catalog", side_effect=Exception("Test error")):
+        with patch(
+            "agentcore_governance.catalog.fetch_principal_catalog",
+            side_effect=Exception("Test error"),
+        ):
             response = catalog_handlers.get_principals()
 
         assert "error" in response
@@ -157,7 +174,14 @@ class TestGetPrincipalsEndpoint:
                 "owner": "team",
                 "last_used_at": "2023-01-01T00:00:00Z",  # Very old
                 "policy_summary": {
-                    "wildcard_actions": ["s3:*", "dynamodb:*", "lambda:*", "ec2:*", "iam:*", "rds:*"],
+                    "wildcard_actions": [
+                        "s3:*",
+                        "dynamodb:*",
+                        "lambda:*",
+                        "ec2:*",
+                        "iam:*",
+                        "rds:*",
+                    ],
                     "resource_scope_wideness": "BROAD",
                     "least_privilege_score": 30.0,
                 },
@@ -174,7 +198,9 @@ class TestGetPrincipalsEndpoint:
             },
         ]
 
-        with patch("agentcore_governance.catalog.fetch_principal_catalog", return_value=mock_principals):
+        with patch(
+            "agentcore_governance.catalog.fetch_principal_catalog", return_value=mock_principals
+        ):
             response = catalog_handlers.get_principals()
 
         principals = response["principals"]

@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import patch
 
 from agentcore_governance import analyzer, catalog
 
@@ -185,7 +183,9 @@ class TestCatalogWithFlagsIntegration:
         for principal in principals:
             policy_summary = principal.get("policy_summary", {})
             principal["wildcard_actions"] = policy_summary.get("wildcard_actions", [])
-            principal["resource_scope_wideness"] = policy_summary.get("resource_scope_wideness", "NARROW")
+            principal["resource_scope_wideness"] = policy_summary.get(
+                "resource_scope_wideness", "NARROW"
+            )
             principal["least_privilege_score"] = policy_summary.get("least_privilege_score", 100.0)
             principal["risk_rating"] = analyzer.compute_risk_rating(principal)
 
@@ -211,7 +211,9 @@ class TestCatalogWithFlagsIntegration:
             }
         ]
 
-        with patch("agentcore_governance.catalog.fetch_principal_catalog", return_value=mock_principals):
+        with patch(
+            "agentcore_governance.catalog.fetch_principal_catalog", return_value=mock_principals
+        ):
             snapshot = catalog.export_catalog_snapshot(environment="dev")
 
         assert "principals" in snapshot

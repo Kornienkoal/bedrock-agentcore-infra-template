@@ -73,10 +73,12 @@ def update_agent_tools(
                 )
 
                 if not is_valid:
-                    validation_errors.append({
-                        "tool_id": tool_id,
-                        "reason": validation_reason,
-                    })
+                    validation_errors.append(
+                        {
+                            "tool_id": tool_id,
+                            "reason": validation_reason,
+                        }
+                    )
 
         # If there are validation errors, return them without updating
         if validation_errors:

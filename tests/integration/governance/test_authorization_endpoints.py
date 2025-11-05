@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
-
 from agentcore_governance import authorization
 from agentcore_governance.api import authorization_handlers
 
@@ -47,7 +45,10 @@ class TestGetAgentToolsEndpoint:
 
     def test_error_handling(self):
         """Test error handling returns proper error structure."""
-        with patch("agentcore_governance.authorization.get_authorized_tools", side_effect=Exception("Test error")):
+        with patch(
+            "agentcore_governance.authorization.get_authorized_tools",
+            side_effect=Exception("Test error"),
+        ):
             response = authorization_handlers.get_agent_tools("test-agent")
 
         assert "error" in response
@@ -170,7 +171,10 @@ class TestUpdateAgentToolsEndpoint:
             ]
         }
 
-        with patch("agentcore_governance.classification.load_tool_classifications", return_value=mock_registry):
+        with patch(
+            "agentcore_governance.classification.load_tool_classifications",
+            return_value=mock_registry,
+        ):
             response = authorization_handlers.update_agent_tools(
                 "test-agent",
                 ["sensitive-tool"],
@@ -199,7 +203,10 @@ class TestUpdateAgentToolsEndpoint:
             "approved_at": "2024-11-01T00:00:00Z",
         }
 
-        with patch("agentcore_governance.classification.load_tool_classifications", return_value=mock_registry):
+        with patch(
+            "agentcore_governance.classification.load_tool_classifications",
+            return_value=mock_registry,
+        ):
             response = authorization_handlers.update_agent_tools(
                 "test-agent",
                 ["sensitive-tool"],
@@ -212,7 +219,10 @@ class TestUpdateAgentToolsEndpoint:
 
     def test_error_handling(self):
         """Test error handling returns proper error structure."""
-        with patch("agentcore_governance.authorization.set_authorized_tools", side_effect=Exception("Test error")):
+        with patch(
+            "agentcore_governance.authorization.set_authorized_tools",
+            side_effect=Exception("Test error"),
+        ):
             response = authorization_handlers.update_agent_tools(
                 "test-agent",
                 ["tool1"],
@@ -265,7 +275,10 @@ class TestCheckToolAccessEndpoint:
 
         authorization.set_authorized_tools("test-agent", ["tool1"])
 
-        with patch("agentcore_governance.classification.get_tool_classification", return_value=mock_registry["tools"][0]):
+        with patch(
+            "agentcore_governance.classification.get_tool_classification",
+            return_value=mock_registry["tools"][0],
+        ):
             response = authorization_handlers.check_tool_access("test-agent", "tool1")
 
         assert response["classification"] == "MODERATE"
