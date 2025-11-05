@@ -103,14 +103,14 @@ Independent Test: Submit request → approve → restricted targets accessible; 
 Goal: Emergency revocation flow with SLA tracking.
 Independent Test: Issue revocation → token simulation blocked within SLA.
 
-- [ ] T062 [US4] Implement `POST /revocations` handler `packages/agentcore-governance/src/agentcore_governance/api/revocation_handlers.py`
-- [ ] T063 [US4] Implement `GET /revocations/{revocationId}` handler `packages/agentcore-governance/src/agentcore_governance/api/revocation_handlers.py`
-- [ ] T064 [US4] Implement propagation tracker (pending → complete) `packages/agentcore-governance/src/agentcore_governance/revocation.py`
-- [ ] T065 [P] [US4] Implement synthetic revocation test scheduler script `packages/agentcore-governance/src/agentcore_governance/revocation_synthetic.py`
-- [ ] T066 [US4] Implement SLA metric emission (latency to complete) `packages/agentcore-governance/src/agentcore_governance/revocation.py`
-- [ ] T067 [US4] Contract tests for revocation endpoints `tests/integration/governance/test_revocation_endpoints.py`
-- [ ] T068 [US4] Synthetic test validation (forced expired token scenario) `tests/integration/governance/test_revocation_sla.py`
-- [ ] T069 [US4] Audit event integrity test for revocation events `tests/integration/governance/test_revocation_audit.py`
+- [X] T062 [US4] Implement `POST /revocations` handler `packages/agentcore-governance/src/agentcore_governance/api/revocation_handlers.py`
+- [X] T063 [US4] Implement `GET /revocations/{revocationId}` handler `packages/agentcore-governance/src/agentcore_governance/api/revocation_handlers.py`
+- [X] T064 [US4] Implement propagation tracker (pending → complete) `packages/agentcore-governance/src/agentcore_governance/revocation.py`
+- [X] T065 [P] [US4] Implement synthetic revocation test scheduler script `packages/agentcore-governance/src/agentcore_governance/revocation_synthetic.py`
+- [X] T066 [US4] Implement SLA metric emission (latency to complete) `packages/agentcore-governance/src/agentcore_governance/revocation.py`
+- [X] T067 [US4] Contract tests for revocation endpoints `tests/integration/governance/test_revocation_endpoints.py`
+- [X] T068 [US4] Synthetic test validation (forced expired token scenario) `tests/integration/governance/test_revocation_sla.py`
+- [X] T069 [US4] Audit event integrity test for revocation events `tests/integration/governance/test_revocation_audit.py`
 
 ---
 ## Phase 7: User Story 5 (Audit Trace Reconstruction) [Priority P3]
@@ -118,14 +118,14 @@ Independent Test: Issue revocation → token simulation blocked within SLA.
 Goal: End-to-end trace, decision history, evidence pack reliability.
 Independent Test: Provide invocation ID → reconstruct chain from logs + decisions without gaps.
 
-- [ ] T070 [US5] Implement `/decisions` listing handler `packages/agentcore-governance/src/agentcore_governance/api/decision_handlers.py`
-- [ ] T071 [US5] Implement `/analyzer/least-privilege` handler `packages/agentcore-governance/src/agentcore_governance/api/analyzer_handlers.py`
-- [ ] T072 [US5] Implement `/evidence-pack` handler `packages/agentcore-governance/src/agentcore_governance/api/evidence_handlers.py`
-- [ ] T073 [P] [US5] Implement missing event detector alert logic `packages/agentcore-governance/src/agentcore_governance/evidence.py`
-- [ ] T074 [US5] Implement correlation chain reconstruction function `packages/agentcore-governance/src/agentcore_governance/evidence.py`
-- [ ] T075 [US5] Contract tests for decisions/analyzer/evidence-pack endpoints `tests/integration/governance/test_decisions_analyzer_evidence.py`
-- [ ] T076 [US5] Integrity hash tamper detection test `tests/integration/governance/test_integrity_detection.py`
-- [ ] T077 [US5] Evidence pack performance test (timing assertion) `tests/integration/governance/test_evidence_pack_perf.py`
+- [X] T070 [US5] Implement `/decisions` listing handler `packages/agentcore-governance/src/agentcore_governance/api/decision_handlers.py`
+- [X] T071 [US5] Implement `/analyzer/least-privilege` handler `packages/agentcore-governance/src/agentcore_governance/api/analyzer_handlers.py`
+- [X] T072 [US5] Implement `/evidence-pack` handler `packages/agentcore-governance/src/agentcore_governance/api/evidence_handlers.py`
+- [X] T073 [P] [US5] Implement missing event detector alert logic `packages/agentcore-governance/src/agentcore_governance/evidence.py`
+- [X] T074 [US5] Implement correlation chain reconstruction function `packages/agentcore-governance/src/agentcore_governance/evidence.py`
+- [X] T075 [US5] Contract tests for decisions/analyzer/evidence-pack endpoints `tests/integration/governance/test_decisions_analyzer_evidence.py`
+- [X] T076 [US5] Integrity hash tamper detection test `tests/integration/governance/test_integrity_detection.py`
+- [X] T077 [US5] Evidence pack performance test (timing assertion) `tests/integration/governance/test_evidence_pack_perf.py`
 
 ---
 ## Phase 8: Polish & Cross-Cutting

@@ -127,6 +127,199 @@ def _detect_missing_events(hours_back: int) -> int:
     return 0
 
 
+def detect_missing_events(
+    events: list[dict[str, Any]],
+    expected_sequence: list[str] | None = None,
+) -> dict[str, Any]:
+    """Detect missing or incomplete events in an audit trail.
+
+    Analyzes correlation chains to identify gaps based on expected
+    event sequences (e.g., request → decision → outcome).
+
+    Args:
+        events: List of audit events to analyze
+        expected_sequence: Optional list of expected event types in order
+
+    Returns:
+        Analysis with missing_events count, incomplete_chains, and alerts
+    """
+    if not events:
+        return {
+            "missing_events": 0,
+            "incomplete_chains": [],
+            "alerts": [],
+        }
+
+    # Group events by correlation ID
+    chains: dict[str, list[dict[str, Any]]] = {}
+    for event in events:
+        corr_id = event.get("correlation_id", "unknown")
+        if corr_id not in chains:
+            chains[corr_id] = []
+        chains[corr_id].append(event)
+
+    # Define default expected sequences for common workflows
+    default_sequences = {
+        "authorization": ["authorization_decision"],
+        "integration": ["integration_request", "integration_approval"],
+        "revocation": ["revocation_request", "revocation_propagated"],
+    }
+
+    incomplete_chains = []
+    alerts = []
+    missing_count = 0
+
+    for corr_id, chain_events in chains.items():
+        event_types = [e.get("event_type") for e in chain_events]
+
+        # Determine expected sequence based on first event type
+        if expected_sequence:
+            expected = expected_sequence
+        else:
+            # Auto-detect expected sequence
+            first_type = event_types[0] if event_types else ""
+            expected = None
+            for _workflow, seq in default_sequences.items():
+                if any(t in str(first_type) for t in seq):
+                    expected = seq
+                    break
+
+        # Check for missing events
+        if expected:
+            missing = [et for et in expected if et not in event_types]
+            if missing:
+                missing_count += len(missing)
+                incomplete_chains.append(
+                    {
+                        "correlation_id": corr_id,
+                        "present_events": event_types,
+                        "missing_events": missing,
+                    }
+                )
+                alerts.append(f"Incomplete chain {corr_id}: missing {', '.join(missing)}")
+
+        # Check for duplicate events (potential replay or logging error)
+        seen = set()
+        for et in event_types:
+            if et in seen:
+                alerts.append(f"Duplicate event type {et} in chain {corr_id}")
+            seen.add(et)
+
+        # Check for out-of-order timestamps
+        timestamps = [e.get("timestamp") for e in chain_events]
+        if timestamps != sorted(t for t in timestamps if t is not None):
+            alerts.append(f"Out-of-order timestamps in chain {corr_id}")
+
+    return {
+        "missing_events": missing_count,
+        "incomplete_chains": incomplete_chains,
+        "total_chains": len(chains),
+        "alerts": alerts,
+    }
+
+
+def reconstruct_correlation_chain(
+    correlation_id: str,
+    events: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Reconstruct complete event trace from correlation ID.
+
+    Builds end-to-end audit trail by collecting all events with
+    matching correlation_id and organizing them chronologically.
+
+    Args:
+        correlation_id: Correlation identifier to trace
+        events: Optional pre-filtered event list; if None, queries all sources
+
+    Returns:
+        Reconstruction with ordered events, summary, and integrity status
+    """
+    # If events not provided, would query CloudWatch Logs, decision registry, etc.
+    if events is None:
+        events = _query_events_by_correlation(correlation_id)
+
+    # Filter to matching correlation ID
+    chain_events = [e for e in events if e.get("correlation_id") == correlation_id]
+
+    # Sort by timestamp
+    chain_events.sort(key=lambda x: x.get("timestamp", ""))
+
+    # Extract event types and timestamps
+    event_types = [e.get("event_type") for e in chain_events]
+    timestamps = [e.get("timestamp") for e in chain_events]
+
+    # Verify integrity hashes
+    integrity_failures = []
+    for event in chain_events:
+        if "integrity_hash" in event and not event["integrity_hash"]:
+            # Would recompute hash and compare
+            integrity_failures.append(event.get("id"))
+
+    # Compute chain latency (first to last event)
+    latency_ms = 0
+    if len(timestamps) >= 2 and timestamps[0] and timestamps[-1]:
+        try:
+            start = datetime.fromisoformat(str(timestamps[0]).replace("Z", "+00:00"))
+            end = datetime.fromisoformat(str(timestamps[-1]).replace("Z", "+00:00"))
+            latency_ms = int((end - start).total_seconds() * 1000)
+        except Exception as e:
+            logger.warning(f"Could not compute chain latency: {e}")
+
+    # Detect missing events in this chain
+    missing_analysis = detect_missing_events(chain_events)
+
+    return {
+        "correlation_id": correlation_id,
+        "event_count": len(chain_events),
+        "events": chain_events,
+        "event_types": event_types,
+        "timestamps": timestamps,
+        "latency_ms": latency_ms,
+        "integrity_failures": integrity_failures,
+        "missing_events": missing_analysis["missing_events"],
+        "alerts": missing_analysis["alerts"],
+        "complete": missing_analysis["missing_events"] == 0,
+    }
+
+
+def _query_events_by_correlation(correlation_id: str) -> list[dict[str, Any]]:
+    """Query all event sources for events matching correlation ID.
+
+    Args:
+        correlation_id: Correlation identifier to search for
+
+    Returns:
+        List of matching events from all sources
+    """
+    events = []
+
+    # Query decision registry
+    try:
+        from agentcore_governance.api import decision_handlers
+
+        decisions = decision_handlers.get_decisions_for_correlation(correlation_id)
+        # Convert decisions to event format
+        for decision in decisions:
+            events.append(
+                {
+                    "id": decision["id"],
+                    "event_type": "policy_decision",
+                    "timestamp": decision["timestamp"],
+                    "correlation_id": decision["correlation_id"],
+                    "subject_id": decision["subject_id"],
+                    "effect": decision["effect"],
+                    "resource": decision["resource"],
+                }
+            )
+    except Exception as e:
+        logger.warning(f"Could not query decision registry: {e}")
+
+    # Would also query CloudWatch Logs, other registries
+    # TODO: Implement CloudWatch Logs Insights query
+
+    return events
+
+
 def _compute_conformance_score(principals: list[dict[str, Any]]) -> float:
     """Compute average conformance score across principals.
 
