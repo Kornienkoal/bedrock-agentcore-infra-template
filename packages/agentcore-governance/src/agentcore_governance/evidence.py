@@ -4,11 +4,8 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 from typing import Any
-
-import boto3
-from botocore.exceptions import ClientError
 
 from agentcore_governance import integrity
 
@@ -37,7 +34,7 @@ def construct_audit_event(
         Audit event dictionary with integrity hash
     """
     event_id = uuid.uuid4().hex
-    timestamp = datetime.now(timezone.utc).isoformat()
+    timestamp = datetime.now(UTC).isoformat()
 
     event = {
         "id": event_id,
@@ -80,11 +77,12 @@ def build_evidence_pack(parameters: dict[str, Any] | None = None) -> dict[str, A
     hours_back = params.get("hours_back", 24)
 
     pack_id = uuid.uuid4().hex
-    generated_at = datetime.now(timezone.utc)
+    generated_at = datetime.now(UTC)
 
     # Fetch catalog snapshot (simplified - would call catalog.fetch_principal_catalog)
     try:
         from agentcore_governance import catalog
+
         principals = catalog.fetch_principal_catalog()
         principal_count = len(principals)
     except Exception as e:
@@ -125,6 +123,7 @@ def _detect_missing_events(hours_back: int) -> int:
     """
     # Simplified implementation - would query CloudWatch Logs Insights
     # for correlation IDs with incomplete chains
+    _ = hours_back  # TODO: Implement CloudWatch Logs query
     return 0
 
 

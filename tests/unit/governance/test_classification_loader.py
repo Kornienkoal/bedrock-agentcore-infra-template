@@ -1,10 +1,9 @@
 """Unit tests for classification loader."""
 
-import pytest
-from pathlib import Path
 from unittest.mock import mock_open, patch
-import yaml
 
+import pytest
+import yaml
 from agentcore_governance import classification
 
 
@@ -138,7 +137,9 @@ class TestRequiresApproval:
 
     def test_sensitive_tool_requires_approval(self):
         """Test that SENSITIVE tools require approval."""
-        registry = {"tools": [{"id": "sensitive_tool", "classification": "SENSITIVE", "owner": "team-1"}]}
+        registry = {
+            "tools": [{"id": "sensitive_tool", "classification": "SENSITIVE", "owner": "team-1"}]
+        }
 
         assert classification.requires_approval("sensitive_tool", registry) is True
 

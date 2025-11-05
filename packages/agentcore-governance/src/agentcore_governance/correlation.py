@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Mapping
 import uuid
+from collections.abc import Mapping
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -26,7 +26,9 @@ class CorrelationContext:
         return {"X-Correlation-Id": ";".join(parts)}
 
 
-def new_correlation_context(*, user: str | None = None, agent: str | None = None, tool: str | None = None) -> CorrelationContext:
+def new_correlation_context(
+    *, user: str | None = None, agent: str | None = None, tool: str | None = None
+) -> CorrelationContext:
     """Create a new correlation context with a generated trace identifier."""
     trace_id = uuid.uuid4().hex
     return CorrelationContext(trace_id=trace_id, user=user, agent=agent, tool=tool)

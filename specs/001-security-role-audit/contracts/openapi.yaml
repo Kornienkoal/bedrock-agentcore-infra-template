@@ -272,11 +272,10 @@ components:
                 type: array
                 items: { type: string }
               resource_scope_wideness: { type: string }
-security:
-  - bearerAuth: []
-components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+security:
+  - bearerAuth: []

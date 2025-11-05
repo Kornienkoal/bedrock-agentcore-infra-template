@@ -1,6 +1,5 @@
 """Integration test for ABAC matrix exporter."""
 
-import pytest
 import csv
 import io
 

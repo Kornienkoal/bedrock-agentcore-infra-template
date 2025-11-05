@@ -10,6 +10,8 @@ def request_integration(payload: dict[str, Any]) -> str:
     raise NotImplementedError("Integration request handler not yet implemented")
 
 
-def approve_integration(integration_id: str, *, approved_targets: list[str], expiry_days: int | None) -> None:
+def approve_integration(
+    integration_id: str, *, approved_targets: list[str], expiry_days: int | None
+) -> None:
     """Approve a pending integration request."""
     raise NotImplementedError("Integration approval flow not yet implemented")

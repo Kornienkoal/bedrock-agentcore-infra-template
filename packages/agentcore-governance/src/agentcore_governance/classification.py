@@ -33,7 +33,7 @@ def load_tool_classifications(registry_path: Path | None = None) -> dict[str, An
         return {"tools": []}
 
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         if not isinstance(data, dict):
@@ -81,7 +81,9 @@ def _validate_tool_entry(tool: dict[str, Any]) -> None:
         logger.warning(f"Tool {tool['id']} is SENSITIVE but missing approval_reference")
 
 
-def get_tool_classification(tool_id: str, registry: dict[str, Any] | None = None) -> dict[str, Any] | None:
+def get_tool_classification(
+    tool_id: str, registry: dict[str, Any] | None = None
+) -> dict[str, Any] | None:
     """Retrieve classification for a specific tool.
 
     Args:
@@ -96,8 +98,8 @@ def get_tool_classification(tool_id: str, registry: dict[str, Any] | None = None
 
     tools = registry.get("tools", [])
     for tool in tools:
-        if tool.get("id") == tool_id:
-            return tool
+        if isinstance(tool, dict) and tool.get("id") == tool_id:
+            return dict(tool)
 
     return None
 

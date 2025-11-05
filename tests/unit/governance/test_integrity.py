@@ -1,7 +1,5 @@
 """Unit tests for integrity hash utility."""
 
-import pytest
-
 from agentcore_governance import integrity
 
 

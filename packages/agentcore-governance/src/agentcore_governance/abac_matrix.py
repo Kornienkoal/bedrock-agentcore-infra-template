@@ -5,12 +5,13 @@ from __future__ import annotations
 import csv
 import io
 import logging
-from typing import Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def export_abac_matrix(records: Iterable[Mapping[str, str]]) -> dict[str, list[Mapping[str, str]]]:
+def export_abac_matrix(records: Iterable[Mapping[str, str]]) -> dict[str, Any]:
     """Return a serializable representation of the ABAC feasibility matrix.
 
     Args:
@@ -47,17 +48,19 @@ def _generate_csv_export(attributes: list[Mapping[str, str]]) -> str:
 
     writer.writeheader()
     for attr in attributes:
-        writer.writerow({
-            "attribute": attr.get("attribute", ""),
-            "source": attr.get("source", ""),
-            "potential_use": attr.get("potential_use", ""),
-            "collection_method": attr.get("collection_method", ""),
-        })
+        writer.writerow(
+            {
+                "attribute": attr.get("attribute", ""),
+                "source": attr.get("source", ""),
+                "potential_use": attr.get("potential_use", ""),
+                "collection_method": attr.get("collection_method", ""),
+            }
+        )
 
     return output.getvalue()
 
 
-def generate_default_abac_matrix() -> dict[str, list[Mapping[str, str]]]:
+def generate_default_abac_matrix() -> dict[str, Any]:
     """Generate default ABAC feasibility matrix based on data model.
 
     Returns:

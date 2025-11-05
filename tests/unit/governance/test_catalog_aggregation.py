@@ -1,9 +1,9 @@
 """Unit tests for catalog aggregation."""
 
-import pytest
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
-from datetime import datetime, timezone
 
+import pytest
 from agentcore_governance import catalog
 
 
@@ -22,10 +22,10 @@ def sample_roles():
             {
                 "RoleName": "agentcore-dev-execution-role",
                 "Arn": "arn:aws:iam::123456789012:role/agentcore-dev-execution-role",
-                "CreateDate": datetime(2024, 1, 1, tzinfo=timezone.utc),
+                "CreateDate": datetime(2024, 1, 1, tzinfo=UTC),
                 "Description": "Execution role for AgentCore runtime",
                 "RoleLastUsed": {
-                    "LastUsedDate": datetime(2024, 11, 1, tzinfo=timezone.utc),
+                    "LastUsedDate": datetime(2024, 11, 1, tzinfo=UTC),
                 },
             },
         ]
@@ -64,7 +64,9 @@ class TestFetchPrincipalCatalog:
         assert principals[0]["type"] == "execution_role"
 
     @patch("agentcore_governance.catalog.boto3")
-    def test_fetch_principals_with_environment_filter(self, mock_boto, mock_iam_client, sample_roles, sample_tags):
+    def test_fetch_principals_with_environment_filter(
+        self, mock_boto, mock_iam_client, sample_roles, sample_tags
+    ):
         """Test catalog fetch with environment filter."""
         mock_boto.client.return_value = mock_iam_client
         mock_iam_client.get_paginator.return_value.paginate.return_value = [sample_roles]
@@ -126,10 +128,12 @@ class TestFlagInactivePrincipals:
 
     def test_flag_inactive_principals(self):
         """Test inactivity flagging."""
-        old_date = (datetime.now(timezone.utc).replace(tzinfo=None) - 
-                   __import__('datetime').timedelta(days=45)).isoformat() + "Z"
-        recent_date = (datetime.now(timezone.utc).replace(tzinfo=None) - 
-                      __import__('datetime').timedelta(days=10)).isoformat() + "Z"
+        old_date = (
+            datetime.now(UTC).replace(tzinfo=None) - __import__("datetime").timedelta(days=45)
+        ).isoformat() + "Z"
+        recent_date = (
+            datetime.now(UTC).replace(tzinfo=None) - __import__("datetime").timedelta(days=10)
+        ).isoformat() + "Z"
 
         principals = [
             {"id": "old-role", "last_used_at": old_date},

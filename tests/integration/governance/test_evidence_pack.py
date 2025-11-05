@@ -1,7 +1,6 @@
 """Integration test for evidence pack generation."""
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from agentcore_governance import evidence
 

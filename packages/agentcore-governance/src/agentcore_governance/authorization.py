@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 
 def get_authorized_tools(agent_id: str) -> list[str]:

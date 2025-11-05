@@ -1,7 +1,5 @@
 """Unit tests for analyzer scoring logic."""
 
-import pytest
-
 from agentcore_governance import analyzer
 
 

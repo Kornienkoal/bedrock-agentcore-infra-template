@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Any, Iterable, Mapping, MutableMapping
+from collections.abc import Iterable, Mapping, MutableMapping
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import boto3
 from botocore.exceptions import ClientError
@@ -12,7 +13,9 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger(__name__)
 
 
-def fetch_principal_catalog(*, environments: Iterable[str] | None = None) -> list[dict[str, object]]:
+def fetch_principal_catalog(
+    *, environments: Iterable[str] | None = None
+) -> list[dict[str, object]]:
     """Return a normalized catalog of principals from IAM roles.
 
     Args:
@@ -43,8 +46,13 @@ def fetch_principal_catalog(*, environments: Iterable[str] | None = None) -> lis
 
                 # Fetch attached policies for footprint
                 try:
-                    attached_policies_response = iam.list_attached_role_policies(RoleName=role["RoleName"])
-                    attached_policies = [p["PolicyArn"] for p in attached_policies_response.get("AttachedPolicies", [])]
+                    attached_policies_response = iam.list_attached_role_policies(
+                        RoleName=role["RoleName"]
+                    )
+                    attached_policies = [
+                        p["PolicyArn"]
+                        for p in attached_policies_response.get("AttachedPolicies", [])
+                    ]
                 except ClientError:
                     attached_policies = []
 
@@ -54,7 +62,9 @@ def fetch_principal_catalog(*, environments: Iterable[str] | None = None) -> lis
                     "environment": role_env,
                     "namespace": tags.get("Namespace", tags.get("namespace", "unknown")),
                     "owner": tags.get("Owner", tags.get("owner", "unknown")),
-                    "purpose": tags.get("Purpose", tags.get("purpose", role.get("Description", ""))),
+                    "purpose": tags.get(
+                        "Purpose", tags.get("purpose", role.get("Description", ""))
+                    ),
                     "created_at": role["CreateDate"].isoformat(),
                     "last_used_at": _extract_last_used(role),
                     "risk_rating": "UNKNOWN",  # Computed later by analyzer
@@ -91,11 +101,15 @@ def _extract_last_used(role: dict[str, Any]) -> str | None:
     """Extract last used timestamp from role metadata."""
     role_last_used = role.get("RoleLastUsed")
     if role_last_used and "LastUsedDate" in role_last_used:
-        return role_last_used["LastUsedDate"].isoformat()
+        last_used_date = role_last_used["LastUsedDate"]
+        if hasattr(last_used_date, "isoformat"):
+            return last_used_date.isoformat()
     return None
 
 
-def summarize_policy_footprint(policy_documents: Iterable[Mapping[str, object]]) -> MutableMapping[str, object]:
+def summarize_policy_footprint(
+    policy_documents: Iterable[Mapping[str, object]],
+) -> MutableMapping[str, object]:
     """Compute policy footprint summary from IAM policy documents.
 
     Args:
@@ -153,7 +167,9 @@ def summarize_policy_footprint(policy_documents: Iterable[Mapping[str, object]])
     }
 
 
-def flag_inactive_principals(principals: list[dict[str, object]], inactivity_days: int = 30) -> list[dict[str, object]]:
+def flag_inactive_principals(
+    principals: list[dict[str, object]], inactivity_days: int = 30
+) -> list[dict[str, object]]:
     """Flag principals inactive for more than specified days.
 
     Args:
@@ -163,18 +179,19 @@ def flag_inactive_principals(principals: list[dict[str, object]], inactivity_day
     Returns:
         Updated principals with inactivity flag
     """
-    threshold = datetime.now(timezone.utc) - timedelta(days=inactivity_days)
+    threshold = datetime.now(UTC) - timedelta(days=inactivity_days)
 
     for principal in principals:
-        last_used_str = principal.get("last_used_at")
-        if not last_used_str:
+        last_used_val = principal.get("last_used_at")
+        if not last_used_val:
             principal["inactive"] = True
             continue
 
         try:
+            last_used_str = str(last_used_val)
             last_used = datetime.fromisoformat(last_used_str.replace("Z", "+00:00"))
             principal["inactive"] = last_used < threshold
-        except (ValueError, AttributeError):
+        except (ValueError, AttributeError, TypeError):
             principal["inactive"] = True
 
     return principals

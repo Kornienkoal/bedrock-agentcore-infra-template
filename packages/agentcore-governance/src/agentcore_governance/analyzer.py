@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Iterable, Mapping
+from collections.abc import Iterable, Mapping
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,9 @@ def compute_least_privilege_score(policy_documents: Iterable[Mapping[str, object
     return max(0.0, min(100.0, score))
 
 
-def detect_orphan_principals(principals: Iterable[Mapping[str, object]]) -> list[Mapping[str, object]]:
+def detect_orphan_principals(
+    principals: Iterable[Mapping[str, object]],
+) -> list[Mapping[str, object]]:
     """Identify principals that lack required ownership metadata.
 
     A principal is considered orphaned if:
@@ -89,12 +91,16 @@ def detect_orphan_principals(principals: Iterable[Mapping[str, object]]) -> list
     orphans = []
 
     for principal in principals:
-        owner = principal.get("owner", "unknown").strip().lower()
-        purpose = principal.get("purpose", "").strip()
+        owner_val = principal.get("owner", "unknown")
+        owner = str(owner_val).strip().lower() if owner_val else "unknown"
+        purpose_val = principal.get("purpose", "")
+        purpose = str(purpose_val).strip() if purpose_val else ""
 
         if owner in ("unknown", "", "none") or not purpose:
             orphans.append(principal)
-            logger.info(f"Orphan detected: {principal.get('id')} (owner={owner}, purpose={bool(purpose)})")
+            logger.info(
+                f"Orphan detected: {principal.get('id')} (owner={owner}, purpose={bool(purpose)})"
+            )
 
     return orphans
 
@@ -109,10 +115,13 @@ def compute_risk_rating(principal: Mapping[str, object]) -> str:
         Risk rating: LOW, MODERATE, or HIGH
     """
     # Extract risk factors
-    wildcard_actions = principal.get("wildcard_actions", [])
-    scope = principal.get("resource_scope_wideness", "NARROW")
-    inactive = principal.get("inactive", False)
-    least_privilege_score = principal.get("least_privilege_score", 100.0)
+    wildcard_actions_val = principal.get("wildcard_actions", [])
+    wildcard_actions = wildcard_actions_val if isinstance(wildcard_actions_val, list) else []
+    scope_val = principal.get("resource_scope_wideness", "NARROW")
+    scope = str(scope_val) if scope_val else "NARROW"
+    inactive = bool(principal.get("inactive", False))
+    score_val = principal.get("least_privilege_score", 100.0)
+    least_privilege_score = float(score_val) if isinstance(score_val, (int, float)) else 100.0
 
     # Risk scoring
     risk_score = 0
