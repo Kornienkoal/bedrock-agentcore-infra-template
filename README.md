@@ -31,16 +31,6 @@ Follow the stage READMEs for a 10–15 minute quick start per stage:
 
 Tip: The docs index lists all diagrams and stage guides: `docs/README.md`.
 
-## Development
-
-**Pre-commit hooks are mandatory.** Install once:
-
-```bash
-uv run pre-commit install
-```
-
-See [`.github/PRE_COMMIT.md`](.github/PRE_COMMIT.md) for details on what gets checked and how to run manually.
-
 ## Architecture
 
 The core flow is simple: the user authenticates in the frontend, calls the shared API, and the AgentCore Runtime orchestrates tools and memory.

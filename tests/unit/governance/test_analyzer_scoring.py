@@ -108,8 +108,11 @@ class TestComputeRiskRating:
     def test_low_risk(self):
         """Test low risk rating."""
         principal = {
-            "wildcard_actions": [],
-            "resource_scope_wideness": "NARROW",
+            "policy_summary": {
+                "wildcard_actions": [],
+                "resource_scope_wideness": "NARROW",
+                "action_count": 10,
+            },
             "inactive": False,
             "least_privilege_score": 95.0,
         }
@@ -120,8 +123,11 @@ class TestComputeRiskRating:
     def test_high_risk(self):
         """Test high risk rating."""
         principal = {
-            "wildcard_actions": ["s3:*", "dynamodb:*", "iam:*", "ec2:*", "lambda:*", "rds:*"],
-            "resource_scope_wideness": "BROAD",
+            "policy_summary": {
+                "wildcard_actions": ["s3:*", "dynamodb:*", "iam:*", "ec2:*", "lambda:*", "rds:*"],
+                "resource_scope_wideness": "BROAD",
+                "action_count": 150,
+            },
             "inactive": True,
             "least_privilege_score": 30.0,
         }
@@ -132,8 +138,11 @@ class TestComputeRiskRating:
     def test_moderate_risk(self):
         """Test moderate risk rating."""
         principal = {
-            "wildcard_actions": ["s3:*"],
-            "resource_scope_wideness": "MODERATE",
+            "policy_summary": {
+                "wildcard_actions": ["s3:*"],
+                "resource_scope_wideness": "MODERATE",
+                "action_count": 60,
+            },
             "inactive": False,
             "least_privilege_score": 70.0,
         }

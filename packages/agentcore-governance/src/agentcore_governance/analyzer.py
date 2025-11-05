@@ -116,11 +116,20 @@ def compute_risk_rating(principal: Mapping[str, object]) -> str:
     Returns:
         Risk rating: LOW, MODERATE, or HIGH
     """
-    # Extract risk factors
-    wildcard_actions_val = principal.get("wildcard_actions", [])
-    wildcard_actions = wildcard_actions_val if isinstance(wildcard_actions_val, list) else []
-    scope_val = principal.get("resource_scope_wideness", "NARROW")
-    scope = str(scope_val) if scope_val else "NARROW"
+    # Extract policy summary if present
+    policy_summary = principal.get("policy_summary", {})
+    if isinstance(policy_summary, dict):
+        wildcard_actions = policy_summary.get("wildcard_actions", [])
+        scope = policy_summary.get("resource_scope_wideness", "NARROW")
+        action_count = policy_summary.get("action_count", 0)
+    else:
+        # Fallback to old structure
+        wildcard_actions_val = principal.get("wildcard_actions", [])
+        wildcard_actions = wildcard_actions_val if isinstance(wildcard_actions_val, list) else []
+        scope_val = principal.get("resource_scope_wideness", "NARROW")
+        scope = str(scope_val) if scope_val else "NARROW"
+        action_count = 0
+
     inactive = bool(principal.get("inactive", False))
     score_val = principal.get("least_privilege_score", 100.0)
     least_privilege_score = float(score_val) if isinstance(score_val, (int, float)) else 100.0
@@ -128,19 +137,30 @@ def compute_risk_rating(principal: Mapping[str, object]) -> str:
     # Risk scoring
     risk_score = 0
 
-    if len(wildcard_actions) > 5:
+    # Wildcard actions penalty
+    wildcard_count = len(wildcard_actions) if isinstance(wildcard_actions, list) else 0
+    if wildcard_count > 5:
         risk_score += 3
-    elif len(wildcard_actions) > 0:
+    elif wildcard_count > 0:
         risk_score += 1
 
+    # Broad permissions penalty
     if scope == "BROAD":
         risk_score += 3
     elif scope == "MODERATE":
         risk_score += 1
 
+    # Excessive permissions penalty
+    if action_count > 100:
+        risk_score += 2
+    elif action_count > 50:
+        risk_score += 1
+
+    # Inactive principal penalty
     if inactive:
         risk_score += 2
 
+    # Least privilege score penalty
     if least_privilege_score < 50:
         risk_score += 2
     elif least_privilege_score < 80:
@@ -153,3 +173,43 @@ def compute_risk_rating(principal: Mapping[str, object]) -> str:
         return "MODERATE"
     else:
         return "LOW"
+
+
+def enrich_principals_with_scores(
+    principals: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Enrich principals with least-privilege scores and risk ratings.
+
+    Args:
+        principals: List of principal records with policy_summary
+
+    Returns:
+        Enriched principals with scores and ratings
+    """
+    for principal in principals:
+        # Compute least-privilege score from policy summary
+        policy_summary = principal.get("policy_summary", {})
+        if isinstance(policy_summary, dict) and policy_summary:
+            # Create mock policy documents from summary for scoring
+            # (In real implementation, we'd store the actual docs)
+            wildcard_actions = policy_summary.get("wildcard_actions", [])
+            wildcard_resources = policy_summary.get("wildcard_resource_statements", 0)
+            total_statements = policy_summary.get("total_statements", 0)
+
+            # Simplified scoring based on summary
+            score = 100.0
+            score -= len(wildcard_actions) * 5
+            score -= wildcard_resources * 10
+
+            # Bonus for narrow scope
+            if total_statements > 0 and policy_summary.get("resource_scope_wideness") == "NARROW":
+                score += 10
+
+            principal["least_privilege_score"] = max(0.0, min(100.0, score))
+        else:
+            principal["least_privilege_score"] = 100.0
+
+        # Compute risk rating
+        principal["risk_rating"] = compute_risk_rating(principal)
+
+    return principals

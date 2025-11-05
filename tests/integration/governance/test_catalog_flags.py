@@ -76,8 +76,11 @@ class TestRiskRatingComputation:
         """Test principal with low risk profile."""
         principal = {
             "id": "role-safe",
-            "wildcard_actions": [],
-            "resource_scope_wideness": "NARROW",
+            "policy_summary": {
+                "wildcard_actions": [],
+                "resource_scope_wideness": "NARROW",
+                "action_count": 10,
+            },
             "inactive": False,
             "least_privilege_score": 95.0,
         }
@@ -90,8 +93,11 @@ class TestRiskRatingComputation:
         """Test principal with high risk profile."""
         principal = {
             "id": "role-dangerous",
-            "wildcard_actions": ["s3:*", "dynamodb:*", "lambda:*", "ec2:*", "iam:*", "rds:*"],
-            "resource_scope_wideness": "BROAD",
+            "policy_summary": {
+                "wildcard_actions": ["s3:*", "dynamodb:*", "lambda:*", "ec2:*", "iam:*", "rds:*"],
+                "resource_scope_wideness": "BROAD",
+                "action_count": 150,
+            },
             "inactive": True,
             "least_privilege_score": 30.0,
         }
@@ -104,8 +110,11 @@ class TestRiskRatingComputation:
         """Test principal with moderate risk profile."""
         principal = {
             "id": "role-medium",
-            "wildcard_actions": ["s3:*", "dynamodb:*"],
-            "resource_scope_wideness": "MODERATE",
+            "policy_summary": {
+                "wildcard_actions": ["s3:*", "dynamodb:*"],
+                "resource_scope_wideness": "MODERATE",
+                "action_count": 60,
+            },
             "inactive": False,
             "least_privilege_score": 70.0,
         }

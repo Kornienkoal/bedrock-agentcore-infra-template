@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable, Mapping, MutableMapping
+from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 
@@ -56,6 +56,9 @@ def fetch_principal_catalog(
                 except ClientError:
                     attached_policies = []
 
+                # Fetch policy documents for footprint analysis
+                policy_summary = _fetch_policy_summary(iam, role["RoleName"], attached_policies)
+
                 principal = {
                     "id": role["Arn"],
                     "type": _infer_principal_type(role["RoleName"], tags),
@@ -71,6 +74,7 @@ def fetch_principal_catalog(
                     "tags": tags,
                     "status": "active",
                     "attached_policies": attached_policies,
+                    "policy_summary": policy_summary,
                 }
                 principals.append(principal)
 
@@ -107,9 +111,53 @@ def _extract_last_used(role: dict[str, Any]) -> str | None:
     return None
 
 
+def _fetch_policy_summary(
+    iam_client: Any, role_name: str, policy_arns: list[str]
+) -> dict[str, Any]:
+    """Fetch and summarize policy documents for a role.
+
+    Args:
+        iam_client: Boto3 IAM client
+        role_name: Role name to fetch policies for
+        policy_arns: List of attached policy ARNs
+
+    Returns:
+        Policy summary with actions, wildcards, and scope
+    """
+    policy_documents = []
+
+    # Fetch inline policies
+    try:
+        inline_policies = iam_client.list_role_policies(RoleName=role_name)
+        for policy_name in inline_policies.get("PolicyNames", []):
+            try:
+                policy_doc = iam_client.get_role_policy(RoleName=role_name, PolicyName=policy_name)
+                policy_documents.append(policy_doc["PolicyDocument"])
+            except ClientError as e:
+                logger.warning(f"Could not fetch inline policy {policy_name} for {role_name}: {e}")
+    except ClientError as e:
+        logger.warning(f"Could not list inline policies for {role_name}: {e}")
+
+    # Fetch managed policies
+    for arn in policy_arns:
+        try:
+            # Get policy version
+            policy = iam_client.get_policy(PolicyArn=arn)
+            default_version = policy["Policy"]["DefaultVersionId"]
+
+            # Get policy document
+            policy_version = iam_client.get_policy_version(PolicyArn=arn, VersionId=default_version)
+            policy_documents.append(policy_version["PolicyVersion"]["Document"])
+        except ClientError as e:
+            logger.warning(f"Could not fetch policy {arn}: {e}")
+
+    # Summarize the policy footprint
+    return summarize_policy_footprint(policy_documents)
+
+
 def summarize_policy_footprint(
     policy_documents: Iterable[Mapping[str, object]],
-) -> MutableMapping[str, object]:
+) -> dict[str, Any]:
     """Compute policy footprint summary from IAM policy documents.
 
     Args:
@@ -152,7 +200,9 @@ def summarize_policy_footprint(
                 wildcard_resources += 1
 
     # Determine scope wideness
-    if wildcard_resources > total_statements * 0.5:
+    if total_statements == 0:
+        scope = "NARROW"
+    elif wildcard_resources > total_statements * 0.5:
         scope = "BROAD"
     elif wildcard_resources > 0:
         scope = "MODERATE"
@@ -160,11 +210,12 @@ def summarize_policy_footprint(
         scope = "NARROW"
 
     return {
-        "attached_policies": [],  # Caller should populate
         "action_count": len(all_actions),
         "wildcard_actions": wildcard_actions,
+        "wildcard_resource_statements": wildcard_resources,
+        "total_statements": total_statements,
         "resource_scope_wideness": scope,
-        "least_privilege_score": 0.0,  # Computed by analyzer
+        "actions": sorted(all_actions),  # For detailed analysis
     }
 
 
