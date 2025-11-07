@@ -23,6 +23,7 @@ def handle_revocation_request(payload: dict[str, Any]) -> dict[str, Any]:
         ValueError: If required fields are missing or invalid
     """
     # Generate correlation ID for tracking
+    response: dict[str, Any] | None = None
     with correlation.new_correlation_context() as corr_id:
         try:
             # Validate payload
@@ -46,7 +47,7 @@ def handle_revocation_request(payload: dict[str, Any]) -> dict[str, Any]:
             )
             logger.info(f"Revocation request audit event: {event['id']}")
 
-            return {
+            response = {
                 "revocation_id": revocation_id,
                 "status": "pending",
                 "message": "Revocation request recorded and pending propagation",
@@ -59,6 +60,10 @@ def handle_revocation_request(payload: dict[str, Any]) -> dict[str, Any]:
         except Exception as e:
             logger.error(f"Revocation request failed: {e}")
             raise
+
+    if response is None:
+        raise RuntimeError("Revocation request response not generated")
+    return response
 
 
 def handle_revocation_get(revocation_id: str) -> dict[str, Any]:
@@ -109,6 +114,7 @@ def handle_revocation_propagate(revocation_id: str) -> dict[str, Any]:
         ValueError: If revocation not found or already propagated
     """
     # Generate correlation ID for tracking
+    response: dict[str, Any] | None = None
     with correlation.new_correlation_context() as corr_id:
         try:
             # Mark as propagated
@@ -130,7 +136,7 @@ def handle_revocation_propagate(revocation_id: str) -> dict[str, Any]:
             )
             logger.info(f"Revocation propagated audit event: {event['id']}")
 
-            return {
+            response = {
                 "revocation_id": revocation_id,
                 "status": "complete",
                 "propagation_latency_ms": latency_ms,
@@ -146,6 +152,10 @@ def handle_revocation_propagate(revocation_id: str) -> dict[str, Any]:
         except Exception as e:
             logger.error(f"Revocation propagation failed: {e}")
             raise
+
+    if response is None:
+        raise RuntimeError("Revocation propagation response not generated")
+    return response
 
 
 def handle_revocations_list(

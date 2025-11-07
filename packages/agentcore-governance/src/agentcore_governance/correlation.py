@@ -6,6 +6,7 @@ import uuid
 from collections.abc import Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
+from typing import Literal
 
 
 @dataclass(frozen=True)
@@ -26,21 +27,31 @@ class CorrelationContext:
             parts.append(f"tool={self.tool}")
         return {"X-Correlation-Id": ";".join(parts)}
 
+    def __enter__(self) -> str:
+        """Support use of the context in `with` blocks returning the trace id."""
 
-@contextmanager
+        return self.trace_id
+
+    def __exit__(self, exc_type, exc, tb) -> Literal[False]:  # noqa: D401 - std context protocol
+        """No-op exit hook for context manager compatibility."""
+
+        return False
+
+
 def new_correlation_context(
     *, user: str | None = None, agent: str | None = None, tool: str | None = None
-):
-    """Create a new correlation context with a generated trace identifier.
+) -> CorrelationContext:
+    """Create a correlation context object with a generated trace identifier."""
 
-    Usage:
-        with new_correlation_context() as corr_id:
-            # Use corr_id for logging/tracing
-            pass
-
-    Yields:
-        Correlation trace_id (str)
-    """
     trace_id = uuid.uuid4().hex
-    ctx = CorrelationContext(trace_id=trace_id, user=user, agent=agent, tool=tool)
-    yield ctx.trace_id
+    return CorrelationContext(trace_id=trace_id, user=user, agent=agent, tool=tool)
+
+
+@contextmanager
+def correlation_scope(
+    *, user: str | None = None, agent: str | None = None, tool: str | None = None
+):
+    """Context manager wrapper that yields a :class:`CorrelationContext`."""
+
+    ctx = new_correlation_context(user=user, agent=agent, tool=tool)
+    yield ctx

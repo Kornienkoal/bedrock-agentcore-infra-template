@@ -96,6 +96,7 @@ Emits metrics (counts, latency, conformance), structured logs (correlation + int
 - See `Userguide.md` for full workflows, advanced features, endpoint details, troubleshooting, and operational guidance.
 - Review `security/tool-classification.yaml` to tune sensitivity levels.
 - Integrate metrics into dashboards for revocation SLA & risk trend tracking.
+- Use `scripts/local/governance-end-to-end.sh` (or `uv run python scripts/local/governance_end_to_end.py`) to execute the full governance orchestration against an AWS account. See `specs/001-security-role-audit/runbook.md` for prerequisites and artifact review steps.
 
 ## Contributing
 Follow repository contribution guidelines in `CONTRIBUTING.md`. Add tests for new modules and keep documentation current.

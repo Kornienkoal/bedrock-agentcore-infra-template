@@ -124,6 +124,7 @@ test-artifacts/
 # Logs
 *.log
 logs/
+reports/
 
 # CloudFormation
 *-packaged.yaml

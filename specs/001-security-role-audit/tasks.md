@@ -132,19 +132,19 @@ Independent Test: Provide invocation ID → reconstruct chain from logs + decisi
 
 Purpose: Optimization, documentation, differential reports, ABAC feasibility artifact finalization.
 
-- [ ] T078 Add differential policy change report (FR-019) `packages/agentcore-governance/src/agentcore_governance/analyzer.py`
-- [ ] T079 Add authorization decision history endpoint `/decisions?subjectId=` enhancements `packages/agentcore-governance/src/agentcore_governance/api/decision_handlers.py`
-- [ ] T080 Add risk scoring aggregation (FR-021) `packages/agentcore-governance/src/agentcore_governance/analyzer.py`
-- [ ] T081 Add quarterly attestation scheduling stub (FR-018) `packages/agentcore-governance/src/agentcore_governance/catalog.py`
-- [ ] T082 Add deprecated tool lifecycle cleanup logic `packages/agentcore-governance/src/agentcore_governance/authorization.py`
-- [ ] T083 Add ABAC feasibility CSV export integration `packages/agentcore-governance/src/agentcore_governance/abac_matrix.py`
-- [ ] T084 Write extended README with governance workflow `packages/agentcore-governance/README.md`
-- [ ] T085 Add quickstart cross-check script `packages/agentcore-governance/src/agentcore_governance/quickstart_check.py`
-- [ ] T086 Add metrics emission wrappers for key endpoints `packages/agentcore-governance/src/agentcore_governance/api/metrics.py`
-- [ ] T087 Add orphan resource remediation script `packages/agentcore-governance/src/agentcore_governance/orphan_cleanup.py`
-- [ ] T088 Final integration test full scenario (end-to-end trace) `tests/integration/governance/test_full_trace_reconstruction.py`
-- [ ] T089 Final conformance score threshold alert test `tests/integration/governance/test_conformance_threshold.py`
-- [ ] T090 Documentation sync validation script `packages/agentcore-governance/src/agentcore_governance/doc_sync.py`
+- [X] T078 Add differential policy change report (FR-019) `packages/agentcore-governance/src/agentcore_governance/analyzer.py`
+- [X] T079 Add authorization decision history endpoint `/decisions?subjectId=` enhancements `packages/agentcore-governance/src/agentcore_governance/api/decision_handlers.py`
+- [X] T080 Add risk scoring aggregation (FR-021) `packages/agentcore-governance/src/agentcore_governance/analyzer.py`
+- [X] T081 Add quarterly attestation scheduling stub (FR-018) `packages/agentcore-governance/src/agentcore_governance/catalog.py`
+- [X] T082 Add deprecated tool lifecycle cleanup logic `packages/agentcore-governance/src/agentcore_governance/authorization.py`
+- [X] T083 Add ABAC feasibility CSV export integration `packages/agentcore-governance/src/agentcore_governance/abac_matrix.py`
+- [X] T084 Write extended README with governance workflow `packages/agentcore-governance/README.md`
+- [X] T085 Add quickstart cross-check script `packages/agentcore-governance/src/agentcore_governance/quickstart_check.py`
+- [X] T086 Add metrics emission wrappers for key endpoints `packages/agentcore-governance/src/agentcore_governance/api/metrics.py`
+- [X] T087 Add orphan resource remediation script `packages/agentcore-governance/src/agentcore_governance/orphan_cleanup.py`
+- [X] T088 Final integration test full scenario (end-to-end trace) `tests/integration/governance/test_full_trace_reconstruction.py`
+- [X] T089 Final conformance score threshold alert test `tests/integration/governance/test_conformance_threshold.py`
+- [X] T090 Documentation sync validation script `packages/agentcore-governance/src/agentcore_governance/doc_sync.py`
 
 ---
 ## Dependency Graph (Story Order)
@@ -183,6 +183,25 @@ MVP = Phase 2 + Phase 3 (US1). Delivers visibility foundation and scoring necess
 
 ## Format Validation
 All tasks include: checkbox, sequential TaskID, optional [P] marker for parallelizable tasks, [USx] label for story phases, and explicit file paths.
+
+---
+## AWS Validation Plan
+- Obtain AWS SSO session and confirm target account access for runtime validation.
+- Execute full governance package in the AWS environment to validate end-to-end behavior.
+
+---
+## Phase 9: Orchestration & Automation
+
+Purpose: Extend validated governance capabilities with scripted orchestration that aligns with existing specification and facilitates repeatable AWS runs.
+
+- [X] T091 Confirm orchestration scope against `specs/001-security-role-audit/spec.md` and `plan.md` to ensure no deviations from approved design.
+- [X] T092 Draft runbook describing end-to-end package execution steps and required AWS prerequisites.
+- [X] T093 Implement Python orchestrator (`scripts/local/governance_end_to_end.py`) chaining catalog, authorization, integrations, revocation, and evidence workflows.
+- [X] T094 Create Bash wrapper (`scripts/local/governance-end-to-end.sh`) to invoke tests, orchestrator script, and artifact collection.
+- [X] T095 Add documentation updates in `packages/agentcore-governance/README.md` covering orchestrated run usage.
+- [X] T096 Capture AWS validation artifact checklist and ensure generated outputs stored under `reports/` with timestamps.
+- [X] T097 Relocate `governance-report-20251106-092455.json` into `reports/` and update repository ignores to prevent accidental commits.
+- [X] T098 Execute the orchestrated governance run end-to-end in AWS for the first time and document any troubleshooting steps required.
 
 ---
 ## Implementation Strategy

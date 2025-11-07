@@ -23,6 +23,7 @@ def handle_integration_request(payload: dict[str, Any]) -> dict[str, Any]:
         ValueError: If required fields are missing or invalid
     """
     # Generate correlation ID for tracking
+    response: dict[str, Any] | None = None
     with correlation.new_correlation_context() as corr_id:
         try:
             # Validate payload
@@ -50,7 +51,7 @@ def handle_integration_request(payload: dict[str, Any]) -> dict[str, Any]:
             )
             logger.info(f"Integration request audit event: {event['id']}")
 
-            return {
+            response = {
                 "integration_id": integration_id,
                 "status": "pending",
                 "message": "Integration request recorded",
@@ -63,6 +64,10 @@ def handle_integration_request(payload: dict[str, Any]) -> dict[str, Any]:
         except Exception as e:
             logger.error(f"Integration request failed: {e}")
             raise
+
+    if response is None:
+        raise RuntimeError("Integration request response not generated")
+    return response
 
 
 def handle_integration_approval(
@@ -84,6 +89,7 @@ def handle_integration_approval(
         ValueError: If integration not found or invalid
     """
     # Generate correlation ID for tracking
+    response: dict[str, Any] | None = None
     with correlation.new_correlation_context() as corr_id:
         try:
             # Validate payload
@@ -125,7 +131,7 @@ def handle_integration_approval(
             # Retrieve updated integration
             updated_integration = integrations.get_integration(integration_id)
 
-            return {
+            response = {
                 "integration_id": integration_id,
                 "status": "active",
                 "approved_targets": approved_targets,
@@ -142,6 +148,10 @@ def handle_integration_approval(
         except Exception as e:
             logger.error(f"Integration approval failed: {e}")
             raise
+
+    if response is None:
+        raise RuntimeError("Integration approval response not generated")
+    return response
 
 
 def handle_integration_get(integration_id: str) -> dict[str, Any]:
