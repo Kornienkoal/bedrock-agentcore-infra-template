@@ -44,6 +44,7 @@ def update_agent_tools(
     reason: str | None = None,
     validate_classification: bool = True,
     approval_records: dict[str, dict[str, Any]] | None = None,
+    classification_registry: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Handle PUT /authorization/agents/{agentId}/tools request.
 
@@ -53,6 +54,7 @@ def update_agent_tools(
         reason: Optional justification for the change
         validate_classification: Whether to enforce classification rules
         approval_records: Optional dict of tool_id -> approval_record for SENSITIVE tools
+        classification_registry: Optional pre-loaded classification registry (for testing)
 
     Returns:
         Response with update status and differential report
@@ -63,7 +65,7 @@ def update_agent_tools(
 
         # Validate tool classifications if requested
         if validate_classification:
-            registry = classification.load_tool_classifications()
+            registry = classification_registry or classification.load_tool_classifications()
 
             for tool_id in tools:
                 is_valid, validation_reason = classification.validate_tool_authorization(

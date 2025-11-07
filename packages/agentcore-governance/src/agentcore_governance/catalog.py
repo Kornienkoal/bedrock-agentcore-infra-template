@@ -14,6 +14,28 @@ from botocore.exceptions import BotoCoreError, ClientError, TokenRetrievalError
 logger = logging.getLogger(__name__)
 
 
+def normalize_environment_filter(
+    environment: str | Iterable[str] | None,
+) -> Iterable[str] | None:
+    """Return environment filter iterable or None for all environments.
+
+    Accepts single string (including "all" or empty), iterable, or None and
+    normalizes to the form expected by catalog queries.
+    """
+
+    if environment is None:
+        return None
+
+    if isinstance(environment, str):
+        value = environment.strip()
+        if not value or value.lower() == "all":
+            return None
+        return [value]
+
+    filtered = [env.strip() for env in environment if env and env.strip().lower() != "all"]
+    return filtered or None
+
+
 def fetch_principal_catalog(
     *, environments: Iterable[str] | None = None
 ) -> list[dict[str, object]]:
@@ -25,6 +47,8 @@ def fetch_principal_catalog(
     Returns:
         List of principal records with metadata
     """
+    environments = normalize_environment_filter(environments)
+
     iam = boto3.client("iam")
     principals = []
 
@@ -362,7 +386,8 @@ def export_catalog_snapshot(
     Returns:
         Dictionary with principals array and optional metadata
     """
-    principals = fetch_principal_catalog(environments=[environment] if environment else None)
+    env_filter = normalize_environment_filter(environment)
+    principals = fetch_principal_catalog(environments=env_filter)
     principals = flag_inactive_principals(principals)
 
     snapshot: dict[str, Any] = {
@@ -372,7 +397,7 @@ def export_catalog_snapshot(
     if include_metadata:
         snapshot["metadata"] = {
             "timestamp": datetime.now(UTC).isoformat(),
-            "environment": environment,
+            "environment": "all" if env_filter is None else list(env_filter),
             "total_count": len(principals),
             "inactive_count": sum(1 for p in principals if p.get("inactive", False)),
         }

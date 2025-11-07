@@ -83,7 +83,7 @@ class TestGetPrincipalsEndpoint:
         with patch("agentcore_governance.catalog.fetch_principal_catalog", return_value=[]):
             response = catalog_handlers.get_principals(environment="prod")
 
-        assert response["filters"]["environment"] == "prod"
+        assert response["filters"]["environment"] == ["prod"]
 
     def test_owner_filter_applied(self):
         """Test that owner filter is reflected in response."""

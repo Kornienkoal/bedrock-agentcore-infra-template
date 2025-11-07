@@ -26,11 +26,12 @@ def get_least_privilege_report(
     Returns:
         Response with conformance metrics, failing principals, and recommendations
     """
+    env_filter = catalog.normalize_environment_filter(environment)
+    env_display = "all" if env_filter is None else list(env_filter)
+
     try:
         # Fetch principal catalog
-        principals = catalog.fetch_principal_catalog(
-            environments=[environment] if environment else None
-        )
+        principals = catalog.fetch_principal_catalog(environments=env_filter)
 
         # Compute least-privilege scores for each principal
         scored_principals: list[dict[str, Any]] = []
@@ -102,7 +103,7 @@ def get_least_privilege_report(
             "threshold": threshold,
             "failing_principals": failing_principals[:50],  # Limit to first 50
             "recommendations": recommendations,
-            "environment": environment,
+            "environment": env_display,
             "status": 200,
         }
 
@@ -178,10 +179,11 @@ def get_orphan_principals(environment: str | None = None) -> dict[str, Any]:
     Returns:
         List of orphaned principals with recommendations
     """
+    env_filter = catalog.normalize_environment_filter(environment)
+    env_display = "all" if env_filter is None else list(env_filter)
+
     try:
-        principals = catalog.fetch_principal_catalog(
-            environments=[environment] if environment else None
-        )
+        principals = catalog.fetch_principal_catalog(environments=env_filter)
 
         # Detect orphans (no owner or no recent usage)
         orphans = analyzer.detect_orphan_principals(principals)
@@ -189,7 +191,7 @@ def get_orphan_principals(environment: str | None = None) -> dict[str, Any]:
         return {
             "orphan_count": len(orphans),
             "orphans": orphans[:100],  # Limit response size
-            "environment": environment,
+            "environment": env_display,
             "status": 200,
         }
 

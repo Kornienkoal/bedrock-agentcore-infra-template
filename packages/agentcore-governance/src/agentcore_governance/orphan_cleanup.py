@@ -109,7 +109,11 @@ def generate_remediation_plan(
             metrics["auto_tag_candidates"] += 1
 
         # Deletion action for inactive orphans
-        if delete_inactive and orphan.get("inactive") and "CONSIDER_DELETION" in recommendations:
+        if (
+            delete_inactive
+            and orphan.get("inactive")
+            and any(rec.startswith("CONSIDER_DELETION") for rec in recommendations)
+        ):
             actions.append(
                 {
                     "principal_id": principal_id,
@@ -233,8 +237,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Orphan principal remediation script")
     parser.add_argument(
         "--environment",
-        default="dev",
-        help="Environment filter (dev, staging, prod)",
+        default=None,
+        help="Environment filter (e.g. dev, staging, prod). Omit for all environments.",
     )
     parser.add_argument(
         "--dry-run",
@@ -274,7 +278,13 @@ def main() -> int:
     logger.info("=" * 80)
     logger.info("Orphan Principal Remediation Script (T087)")
     logger.info("=" * 80)
-    logger.info(f"Environment: {args.environment}")
+    from agentcore_governance.catalog import normalize_environment_filter
+
+    env_values = normalize_environment_filter(args.environment)
+    env_list = list(env_values) if env_values is not None else None
+    env_label = "all" if env_list is None else ", ".join(env_list)
+
+    logger.info(f"Environment: {env_label}")
     logger.info(f"Dry-run: {not args.execute}")
     logger.info(f"Auto-tag: {args.auto_tag}")
     logger.info(f"Delete inactive: {args.delete_inactive}")
@@ -284,10 +294,13 @@ def main() -> int:
     try:
         # Fetch principal catalog
         from agentcore_governance.analyzer import enrich_principals_with_scores
-        from agentcore_governance.catalog import fetch_principal_catalog, flag_inactive_principals
+        from agentcore_governance.catalog import (
+            fetch_principal_catalog,
+            flag_inactive_principals,
+        )
 
         logger.info("Fetching principal catalog...")
-        principals = fetch_principal_catalog(environments=[args.environment])
+        principals = fetch_principal_catalog(environments=env_list)
         principals = flag_inactive_principals(principals, inactivity_days=30)
         principals = enrich_principals_with_scores(principals)
 

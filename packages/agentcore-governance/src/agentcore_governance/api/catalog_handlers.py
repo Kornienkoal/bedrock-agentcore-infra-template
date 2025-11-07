@@ -27,11 +27,12 @@ def get_principals(
     Returns:
         Response with principals array, pagination metadata, and filters applied
     """
+    env_filter = catalog.normalize_environment_filter(environment)
+    env_display = "all" if env_filter is None else list(env_filter)
+
     try:
         # Fetch principals from catalog
-        all_principals = catalog.fetch_principal_catalog(
-            environments=[environment] if environment else None
-        )
+        all_principals = catalog.fetch_principal_catalog(environments=env_filter)
 
         # Apply owner filter if specified
         if owner:
@@ -80,13 +81,14 @@ def get_principals(
                 "has_prev": page > 1,
             },
             "filters": {
-                "environment": environment,
+                "environment": env_display,
                 "owner": owner,
             },
         }
 
     except Exception as e:
         logger.error(f"Error fetching principals: {e}", exc_info=True)
+
         return {
             "error": str(e),
             "principals": [],
@@ -99,7 +101,7 @@ def get_principals(
                 "has_prev": False,
             },
             "filters": {
-                "environment": environment,
+                "environment": env_display,
                 "owner": owner,
             },
         }
