@@ -1,0 +1,382 @@
+openapi: 3.0.3
+info:
+  title: Governance & Security Audit API
+  version: 0.1.0
+  description: Internal API for principal/catalog, tool classification, authorization control, revocation, evidence packs.
+servers:
+  - url: https://internal-governance.example.com
+paths:
+  /catalog/principals:
+    get:
+      summary: List principals with metadata
+      parameters:
+        - in: query
+          name: environment
+          schema:
+            type: string
+        - in: query
+          name: owner
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Principal array
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Principal'
+  /catalog/tools:
+    get:
+      summary: List tools and classification
+      responses:
+        '200':
+          description: Tool list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tool'
+  /classification/tools/{toolId}:
+    patch:
+      summary: Update tool classification (requires approval for SENSITIVE)
+      parameters:
+        - in: path
+          name: toolId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                classification:
+                  type: string
+                  enum:
+                    - LOW
+                    - MODERATE
+                    - SENSITIVE
+                justification:
+                  type: string
+      responses:
+        '200':
+          description: Updated tool
+        '403':
+          description: Approval required or denied
+  /authorization/agents/{agentId}/tools:
+    get:
+      summary: List tools authorized for agent
+      parameters:
+        - in: path
+          name: agentId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tool identifiers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+    put:
+      summary: Replace agent authorized tools set
+      parameters:
+        - in: path
+          name: agentId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tools:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Updated mapping
+        '400':
+          description: Invalid tool list
+  /integrations:
+    post:
+      summary: Request integration allowlist entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - justification
+                - requestedTargets
+              properties:
+                name:
+                  type: string
+                justification:
+                  type: string
+                requestedTargets:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '202':
+          description: Request recorded
+  /integrations/{integrationId}/approve:
+    post:
+      summary: Approve integration request
+      parameters:
+        - in: path
+          name: integrationId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                approvedTargets:
+                  type: array
+                  items:
+                    type: string
+                expiryDays:
+                  type: integer
+      responses:
+        '200':
+          description: Integration approved
+        '404':
+          description: Not found
+  /revocations:
+    post:
+      summary: Initiate revocation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - subjectType
+                - subjectId
+                - scope
+              properties:
+                subjectType:
+                  type: string
+                  enum:
+                    - user
+                    - integration
+                    - tool
+                    - agent
+                    - principal
+                subjectId:
+                  type: string
+                scope:
+                  type: string
+                  enum:
+                    - user_access
+                    - tool_access
+                    - integration_access
+                    - principal_assume
+                reason:
+                  type: string
+      responses:
+        '202':
+          description: Revocation pending
+  /revocations/{revocationId}:
+    get:
+      summary: Get revocation status
+      parameters:
+        - in: path
+          name: revocationId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Revocation record
+        '404':
+          description: Not found
+  /evidence-pack:
+    post:
+      summary: Generate evidence pack
+      requestBody:
+        required: false
+      responses:
+        '200':
+          description: Evidence pack metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvidencePack'
+  /decisions:
+    get:
+      summary: List policy decisions (filterable)
+      parameters:
+        - in: query
+          name: subjectId
+          schema:
+            type: string
+        - in: query
+          name: effect
+          schema:
+            type: string
+            enum:
+              - allow
+              - deny
+      responses:
+        '200':
+          description: Decision list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PolicyDecision'
+  /analyzer/least-privilege:
+    get:
+      summary: Get least privilege conformance report
+      responses:
+        '200':
+          description: Conformance metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeastPrivilegeReport'
+  /abac/feasibility:
+    get:
+      summary: Retrieve ABAC feasibility matrix
+      responses:
+        '200':
+          description: Attribute matrix
+components:
+  schemas:
+    Principal:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        environment:
+          type: string
+        namespace:
+          type: string
+        owner:
+          type: string
+        purpose:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        last_used_at:
+          type: string
+          format: date-time
+        risk_rating:
+          type: string
+        status:
+          type: string
+        least_privilege_score:
+          type: number
+    Tool:
+      type: object
+      properties:
+        id:
+          type: string
+        classification:
+          type: string
+        owner:
+          type: string
+        external_connectivity:
+          type: string
+        allowed_agents:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+    PolicyDecision:
+      type: object
+      properties:
+        id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        subject_type:
+          type: string
+        subject_id:
+          type: string
+        action:
+          type: string
+        resource:
+          type: string
+        effect:
+          type: string
+        policy_reference:
+          type: string
+        correlation_id:
+          type: string
+        reason:
+          type: string
+    EvidencePack:
+      type: object
+      properties:
+        id:
+          type: string
+        generated_at:
+          type: string
+          format: date-time
+        principal_snapshot_count:
+          type: integer
+        audit_event_range_hours:
+          type: integer
+        conformance_score:
+          type: number
+        missing_events:
+          type: integer
+    LeastPrivilegeReport:
+      type: object
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+        average_score:
+          type: number
+        principals:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              score:
+                type: number
+              wildcard_actions:
+                type: array
+                items:
+                  type: string
+              resource_scope_wideness:
+                type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []

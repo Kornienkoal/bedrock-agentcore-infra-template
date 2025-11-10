@@ -15,6 +15,8 @@ repos:
       - id: check-merge-conflict
       - id: detect-private-key
 
+  # Terraform hooks (optional - only run if terraform/tflint/terraform-docs installed)
+  # Skip with: SKIP=terraform_fmt,terraform_validate,terraform_tflint,terraform_docs git commit
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.103.0
     hooks:
@@ -22,20 +24,24 @@ repos:
         args:
           - --args=-recursive
         files: ^infrastructure/terraform/envs/dev/
+        stages: [manual]
       - id: terraform_validate
         args:
           - --hook-config=--retry-once-with-cleanup=true
         files: ^infrastructure/terraform/envs/dev/
+        stages: [manual]
       - id: terraform_tflint
         args:
           - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
         files: ^infrastructure/terraform/envs/dev/
+        stages: [manual]
       - id: terraform_docs
         args:
           - --hook-config=--path-to-file=README.md
           - --hook-config=--add-to-existing-file=true
           - --hook-config=--create-file-if-not-exist=true
         files: ^infrastructure/terraform/envs/dev/
+        stages: [manual]
 
   # Python linting and formatting with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit

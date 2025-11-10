@@ -1,0 +1,20 @@
+# Tool classification registry
+#
+# Populate with tool entries to drive governance decisions.
+# Example structure:
+# tools:
+#   - id: customer_support_retriever
+#     classification: MODERATE
+#     owner: support-platform
+#     external_connectivity: LIMITED
+#     justification: Accesses Zendesk API for ticket data.
+#     review_interval_days: 90
+#
+#   - id: knowledge_base_writer
+#     classification: SENSITIVE
+#     owner: knowledge-team
+#     external_connectivity: NONE
+#     justification: Writes to internal knowledge base; sensitive editing controls required.
+#     approval_reference: CHG-12345
+
+tools: []

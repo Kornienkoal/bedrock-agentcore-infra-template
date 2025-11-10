@@ -19,20 +19,17 @@ dependencies = [
     "pyyaml>=6.0.0",
     "requests>=2.32.0",
     "aws-xray-sdk>=2.14.0",
-
     # Bedrock AgentCore SDK (AWS official)
     "bedrock-agentcore>=1.0.0",
     "bedrock-agentcore-starter-toolkit>=0.1.26",
-
     # Strands framework
     "strands-agents>=0.1.0",
     "strands-agents-tools>=0.1.0",
-
     # MCP protocol
     "mcp>=1.0.0",
-
     # Streamlit UI
     "streamlit>=1.40.0",
+    "playwright>=1.55.0",
 ]
 
 # Development dependencies for the entire workspace

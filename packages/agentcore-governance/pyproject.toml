@@ -1,0 +1,14 @@
+[project]
+name = "agentcore-governance"
+version = "0.0.1"
+description = "Governance utilities for Bedrock AgentCore security audit features"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "boto3>=1.34.0",
+  "pyyaml>=6.0",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"

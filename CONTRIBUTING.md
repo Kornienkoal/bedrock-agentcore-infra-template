@@ -8,14 +8,14 @@ Build a production-ready, agent-agnostic Amazon Bedrock AgentCore foundation tha
 
 ## 📋 Table of Contents
 
-- [Development Setup](#development-setup)
-- [Project Structure](#project-structure)
-- [Coding Standards](#coding-standards)
-- [Making Changes](#making-changes)
-- [Testing Guidelines](#testing-guidelines)
-- [Documentation](#documentation)
-- [Pull Request Process](#pull-request-process)
-- [Release Process](#release-process)
+- [Development Setup](#-development-setup)
+- [Project Structure](#-project-structure)
+- [Coding Standards](#-coding-standards)
+- [Making Changes](#-making-changes)
+- [Testing Guidelines](#-testing-guidelines)
+- [Documentation](#-documentation)
+- [Pull Request Process](#-pull-request-process)
+- [Release Process](#-release-process)
 
 ## 🛠️ Development Setup
 
