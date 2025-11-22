@@ -50,7 +50,9 @@ class TestOAuthState:
     def test_decode_rejects_expired_payload(self, mock_config, monkeypatch):  # noqa: ARG002
         # Freeze time for encoding
         initial_time = 1_700_000_000
-        monkeypatch.setattr("services.frontend_streamlit.oauth_state.time.time", lambda: initial_time)
+        monkeypatch.setattr(
+            "services.frontend_streamlit.oauth_state.time.time", lambda: initial_time
+        )
         state_value = encode_oauth_state("verifier-abc")
 
         # Advance time beyond the allowed age

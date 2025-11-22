@@ -54,4 +54,4 @@ def load_gateway_tools(
 
     with create_mcp_client(gateway_url, authorization_header) as client:
         tools = client.list_tools_sync()
-        return filter_tools_by_allowed(tools, gateway_cfg, logger)  # type: ignore[no-any-return]
+        return filter_tools_by_allowed(tools, gateway_cfg, logger)

@@ -12,11 +12,10 @@ project_root = Path(__file__).resolve().parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
+import requests  # noqa: E402
 import streamlit as st  # noqa: E402
 import streamlit.components.v1 as components  # noqa: E402
-import requests  # noqa: E402
 
-from services.frontend_streamlit.config import load_config  # noqa: E402
 from services.frontend_streamlit.auth import (  # noqa: E402
     build_authorization_url,
     build_logout_url,
@@ -32,6 +31,7 @@ from services.frontend_streamlit.components import (  # noqa: E402
     render_header,
     render_login_button,
 )
+from services.frontend_streamlit.config import load_config  # noqa: E402
 from services.frontend_streamlit.oauth_state import (  # noqa: E402
     OAuthStateError,
     decode_oauth_state,
@@ -96,13 +96,13 @@ def fetch_agents(access_token: str) -> list[dict]:
     try:
         config = load_config()
         # Ensure URL doesn't end with slash to avoid double slash
-        base_url = config.frontend_gateway_url.rstrip('/')
+        base_url = config.frontend_gateway_url.rstrip("/")
         url = f"{base_url}/agents"
         headers = {"Authorization": f"Bearer {access_token}"}
-        
+
         response = requests.get(url, headers=headers, timeout=5)
         response.raise_for_status()
-        
+
         data = response.json()
         return data.get("agents", [])
     except Exception as e:
@@ -114,7 +114,7 @@ def render_agent_selector() -> None:
     """Render agent selection dropdown and maintain per-agent state."""
 
     state = get_session_state()
-    
+
     # In local mode, we might not have a token, but we have AVAILABLE_AGENTS
     if LOCAL_MODE:
         agents = AVAILABLE_AGENTS
@@ -132,7 +132,7 @@ def render_agent_selector() -> None:
     # Initialize selected agent in session state if not set
     if "selected_agent" not in st.session_state:
         st.session_state.selected_agent = agents[0]["id"]
-    
+
     # Ensure selected agent is valid (in case list changed)
     agent_ids = [a["id"] for a in agents]
     if st.session_state.selected_agent not in agent_ids:

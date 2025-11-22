@@ -1,13 +1,14 @@
+import logging
 import os
+
 import jwt
 from jwt import PyJWKClient
-import logging
 
 logger = logging.getLogger()
 
-COGNITO_USER_POOL_ID = os.environ.get('COGNITO_USER_POOL_ID')
-COGNITO_CLIENT_ID = os.environ.get('COGNITO_CLIENT_ID')
-AWS_REGION = os.environ.get('AWS_REGION', 'us-east-1')
+COGNITO_USER_POOL_ID = os.environ.get("COGNITO_USER_POOL_ID")
+COGNITO_CLIENT_ID = os.environ.get("COGNITO_CLIENT_ID")
+AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 
 # Ensure we have the necessary environment variables
 if COGNITO_USER_POOL_ID:
@@ -16,6 +17,7 @@ if COGNITO_USER_POOL_ID:
 else:
     logger.warning("COGNITO_USER_POOL_ID not set. Token validation will fail.")
     jwk_client = None
+
 
 def validate_token(token):
     """
@@ -27,13 +29,13 @@ def validate_token(token):
 
     try:
         signing_key = jwk_client.get_signing_key_from_jwt(token)
-        
+
         claims = jwt.decode(
             token,
             signing_key.key,
             algorithms=["RS256"],
             audience=COGNITO_CLIENT_ID,
-            issuer=f"https://cognito-idp.{AWS_REGION}.amazonaws.com/{COGNITO_USER_POOL_ID}"
+            issuer=f"https://cognito-idp.{AWS_REGION}.amazonaws.com/{COGNITO_USER_POOL_ID}",
         )
         return claims
     except Exception as e:

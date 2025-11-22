@@ -112,7 +112,7 @@ def load_config() -> AppConfig:
 
         # Fetch API Gateway configuration
         invoke_url = get_ssm_parameter(f"{base_path}/gateway/invoke_url")
-        
+
         # Fetch Frontend Gateway configuration
         frontend_gateway_url = get_ssm_parameter(f"{base_path}/frontend-gateway/api_endpoint")
 

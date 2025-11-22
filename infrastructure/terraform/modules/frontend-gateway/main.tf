@@ -75,14 +75,20 @@ module "lambda_function" {
 resource "aws_apigatewayv2_api" "this" {
   name          = local.name_prefix
   protocol_type = "HTTP"
-  tags          = var.tags
+  tags = merge(var.tags, {
+    Component = "FrontendGateway"
+    AgentCore = "FrontendGateway"
+  })
 }
 
 resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.this.id
   name        = "$default"
   auto_deploy = true
-  tags        = var.tags
+  tags = merge(var.tags, {
+    Component = "FrontendGateway"
+    AgentCore = "FrontendGateway"
+  })
 }
 
 resource "aws_apigatewayv2_integration" "lambda" {
@@ -115,5 +121,8 @@ resource "aws_ssm_parameter" "api_endpoint" {
   name  = "/agentcore/${var.environment}/frontend-gateway/api_endpoint"
   type  = "String"
   value = aws_apigatewayv2_api.this.api_endpoint
-  tags  = var.tags
+  tags = merge(var.tags, {
+    Component = "FrontendGateway"
+    AgentCore = "FrontendGateway"
+  })
 }
