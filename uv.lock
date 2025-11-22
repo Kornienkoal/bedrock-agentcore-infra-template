@@ -7,7 +7,7 @@ members = [
     "agentcore-common",
     "agentcore-global-tools",
     "agentcore-tools",
-    "bedrock-agentcore-template",
+    "aws-agentcore-enterprise-toolkit",
     "customer-support-agent",
     "streamlit-app",
     "warranty-docs-agent",
@@ -205,6 +205,69 @@ wheels = [
 ]
 
 [[package]]
+name = "aws-agentcore-enterprise-toolkit"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "aws-xray-sdk" },
+    { name = "bedrock-agentcore" },
+    { name = "bedrock-agentcore-starter-toolkit" },
+    { name = "boto3" },
+    { name = "mcp" },
+    { name = "pydantic" },
+    { name = "pyyaml" },
+    { name = "requests" },
+    { name = "strands-agents" },
+    { name = "strands-agents-tools" },
+    { name = "streamlit" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "boto3-stubs" },
+    { name = "mypy" },
+    { name = "playwright" },
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-playwright" },
+    { name = "ruff" },
+    { name = "types-pyyaml" },
+    { name = "types-requests" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aws-xray-sdk", specifier = ">=2.14.0" },
+    { name = "bedrock-agentcore", specifier = ">=1.0.0" },
+    { name = "bedrock-agentcore-starter-toolkit", git = "https://github.com/aws/bedrock-agentcore-starter-toolkit?rev=main" },
+    { name = "boto3", specifier = ">=1.35.0" },
+    { name = "mcp", specifier = ">=1.0.0" },
+    { name = "pydantic", specifier = ">=2.0.0" },
+    { name = "pyyaml", specifier = ">=6.0.0" },
+    { name = "requests", specifier = ">=2.32.0" },
+    { name = "strands-agents", specifier = ">=0.1.0" },
+    { name = "strands-agents-tools", specifier = ">=0.1.0" },
+    { name = "streamlit", specifier = ">=1.40.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "boto3-stubs", specifier = ">=1.35.0" },
+    { name = "mypy", specifier = ">=1.18.0" },
+    { name = "playwright", specifier = ">=1.50.0" },
+    { name = "pre-commit", specifier = ">=4.0.0" },
+    { name = "pytest", specifier = ">=8.0.0" },
+    { name = "pytest-asyncio", specifier = ">=0.23.0" },
+    { name = "pytest-cov", specifier = ">=4.1.0" },
+    { name = "pytest-playwright", specifier = ">=0.6.2" },
+    { name = "ruff", specifier = ">=0.14.0" },
+    { name = "types-pyyaml", specifier = ">=6.0.0" },
+    { name = "types-requests", specifier = ">=2.32.0" },
+]
+
+[[package]]
 name = "aws-requests-auth"
 version = "0.4.3"
 source = { registry = "https://pypi.org/simple" }
@@ -288,69 +351,6 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "urllib3" },
     { name = "uvicorn" },
-]
-
-[[package]]
-name = "bedrock-agentcore-template"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "aws-xray-sdk" },
-    { name = "bedrock-agentcore" },
-    { name = "bedrock-agentcore-starter-toolkit" },
-    { name = "boto3" },
-    { name = "mcp" },
-    { name = "pydantic" },
-    { name = "pyyaml" },
-    { name = "requests" },
-    { name = "strands-agents" },
-    { name = "strands-agents-tools" },
-    { name = "streamlit" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "boto3-stubs" },
-    { name = "mypy" },
-    { name = "playwright" },
-    { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "pytest-playwright" },
-    { name = "ruff" },
-    { name = "types-pyyaml" },
-    { name = "types-requests" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aws-xray-sdk", specifier = ">=2.14.0" },
-    { name = "bedrock-agentcore", specifier = ">=1.0.0" },
-    { name = "bedrock-agentcore-starter-toolkit", git = "https://github.com/aws/bedrock-agentcore-starter-toolkit?rev=main" },
-    { name = "boto3", specifier = ">=1.35.0" },
-    { name = "mcp", specifier = ">=1.0.0" },
-    { name = "pydantic", specifier = ">=2.0.0" },
-    { name = "pyyaml", specifier = ">=6.0.0" },
-    { name = "requests", specifier = ">=2.32.0" },
-    { name = "strands-agents", specifier = ">=0.1.0" },
-    { name = "strands-agents-tools", specifier = ">=0.1.0" },
-    { name = "streamlit", specifier = ">=1.40.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "boto3-stubs", specifier = ">=1.35.0" },
-    { name = "mypy", specifier = ">=1.18.0" },
-    { name = "playwright", specifier = ">=1.50.0" },
-    { name = "pre-commit", specifier = ">=4.0.0" },
-    { name = "pytest", specifier = ">=8.0.0" },
-    { name = "pytest-asyncio", specifier = ">=0.23.0" },
-    { name = "pytest-cov", specifier = ">=4.1.0" },
-    { name = "pytest-playwright", specifier = ">=0.6.2" },
-    { name = "ruff", specifier = ">=0.14.0" },
-    { name = "types-pyyaml", specifier = ">=6.0.0" },
-    { name = "types-requests", specifier = ">=2.32.0" },
 ]
 
 [[package]]

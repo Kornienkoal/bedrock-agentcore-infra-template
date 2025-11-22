@@ -55,6 +55,9 @@ module "lambda_function" {
           "bedrock-agentcore:InvokeAgentRuntimeForUser",
           "bedrock-agentcore:ListAgentRuntimes"
         ],
+        # Note: Wildcard resource is required because bedrock-agentcore actions
+        # do not support resource-level permissions. ARN-based filtering is not
+        # available for these API operations per AWS service limitations.
         Resource = "*"
       },
       {

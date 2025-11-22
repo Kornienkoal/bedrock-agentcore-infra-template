@@ -25,7 +25,7 @@ def validate_token(token):
     Returns the decoded claims if valid, raises exception otherwise.
     """
     if not jwk_client:
-        raise Exception("Configuration error: COGNITO_USER_POOL_ID not set")
+        raise ValueError("Configuration error: COGNITO_USER_POOL_ID not set")
 
     try:
         signing_key = jwk_client.get_signing_key_from_jwt(token)

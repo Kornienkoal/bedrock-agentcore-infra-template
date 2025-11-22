@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+from functools import lru_cache
 
 import boto3
 from auth import validate_token
@@ -18,6 +19,11 @@ except Exception as e:
     runtime_client = None
 
 
+def normalize(name):
+    """Normalize agent name for canonical matching (ignore case and separators)."""
+    return name.replace("_", "").replace("-", "").lower()
+
+
 def error_response(code, error, message):
     return {
         "statusCode": code,
@@ -26,8 +32,9 @@ def error_response(code, error, message):
     }
 
 
+@lru_cache(maxsize=128)
 def resolve_agent_arn(agent_id):
-    # TODO: Implement caching to avoid listing on every request
+    """Resolve agent ID to ARN. Results are cached to avoid repeated API calls."""
     if not control_client:
         return None
 
@@ -38,14 +45,10 @@ def resolve_agent_arn(agent_id):
             if name == agent_id:
                 return agent.get("agentRuntimeArn")
             # Canonical matching (ignore case and separators)
-            if (
-                name.replace("_", "").replace("-", "").lower()
-                == agent_id.replace("_", "").replace("-", "").lower()
-            ):
+            if normalize(name) == normalize(agent_id):
                 return agent.get("agentRuntimeArn")
     except Exception as e:
         logger.error(f"Failed to resolve agent ARN: {e}")
-    return None
 
 
 def list_agents(allowed_agents):
@@ -57,9 +60,6 @@ def list_agents(allowed_agents):
         all_agents = response.get("agentRuntimes", [])
 
         # Normalize allowed agents for canonical matching
-        def normalize(name):
-            return name.replace("_", "").replace("-", "").lower()
-
         normalized_allowed = {normalize(a): a for a in allowed_agents if a != "*"}
         allow_all = "*" in allowed_agents
 
@@ -133,9 +133,15 @@ def invoke_agent(agent_id, body, user_id):
             "headers": {"Content-Type": "application/json"},
         }
 
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in request body: {e}")
+        return error_response(400, "Bad Request", "Invalid JSON in request body")
+    except runtime_client.exceptions.ClientError as e:
+        logger.error(f"AWS client error during invocation: {e}")
+        return error_response(502, "Bad Gateway", "Failed to invoke agent")
     except Exception as e:
-        logger.error(f"Invocation failed: {e}")
-        return error_response(502, "Bad Gateway", str(e))
+        logger.error(f"Unexpected error during invocation: {e}")
+        return error_response(502, "Bad Gateway", "Internal server error")
 
 
 def lambda_handler(event, context):  # noqa: ARG001
@@ -154,8 +160,16 @@ def lambda_handler(event, context):  # noqa: ARG001
     if not auth_header:
         return error_response(401, "Unauthorized", "Missing Authorization header")
 
+    # Validate Authorization header format
+    parts = auth_header.split(" ")
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        logger.error(f"Malformed Authorization header: {auth_header}")
+        return error_response(
+            401, "Unauthorized", "Malformed Authorization header. Expected format: 'Bearer <token>'"
+        )
+
     try:
-        token = auth_header.split(" ")[1]
+        token = parts[1]
         claims = validate_token(token)
     except Exception as e:
         logger.error(f"Auth failed: {e}")
@@ -172,7 +186,11 @@ def lambda_handler(event, context):  # noqa: ARG001
             allowed_agents = json.loads(allowed_agents_raw)
             if not isinstance(allowed_agents, list):
                 allowed_agents = [str(allowed_agents)]
-        except Exception:  # noqa: S110
+        except Exception as e:  # noqa: S110
+            logger.warning(
+                f"Failed to parse allowed_agents_raw as JSON: {allowed_agents_raw!r}. "
+                f"Exception: {e}. Falling back to comma-separated parsing."
+            )
             allowed_agents = [s.strip() for s in allowed_agents_raw.split(",")]
 
     logger.info(f"User {user_id} authorized. Allowed agents: {allowed_agents}")
@@ -187,9 +205,6 @@ def lambda_handler(event, context):  # noqa: ARG001
         agent_id = parts[1]
 
         # Normalize for canonical matching
-        def normalize(name):
-            return name.replace("_", "").replace("-", "").lower()
-
         normalized_allowed = {normalize(a) for a in allowed_agents if a != "*"}
         allow_all = "*" in allowed_agents
 

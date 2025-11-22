@@ -88,8 +88,16 @@ AVAILABLE_AGENTS = [
 
 
 @st.cache_data(ttl=300)
-def fetch_agents(access_token: str) -> list[dict]:
-    """Fetch available agents from the Frontend Gateway."""
+def fetch_agents(user_id: str, access_token: str) -> list[dict]:  # noqa: ARG001
+    """Fetch available agents from the Frontend Gateway.
+
+    Args:
+        user_id: User identifier for cache keying (prevents memory bloat on token refresh)
+        access_token: JWT token for authentication
+
+    Returns:
+        List of available agent dictionaries
+    """
     if LOCAL_MODE:
         return AVAILABLE_AGENTS
 
@@ -105,8 +113,13 @@ def fetch_agents(access_token: str) -> list[dict]:
 
         data = response.json()
         return data.get("agents", [])
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to fetch agents from Gateway: {e}", exc_info=True)
+        st.error(f"Unable to connect to agent service: {e}")
+        return []
     except Exception as e:
-        logger.error(f"Failed to fetch agents: {e}")
+        logger.error(f"Unexpected error fetching agents: {e}", exc_info=True)
+        st.error("An unexpected error occurred while loading agents")
         return []
 
 
@@ -119,7 +132,7 @@ def render_agent_selector() -> None:
     if LOCAL_MODE:
         agents = AVAILABLE_AGENTS
     elif state.authenticated and state.id_token:
-        agents = fetch_agents(state.id_token)
+        agents = fetch_agents(state.user_id or "unknown", state.id_token)
     else:
         # Not authenticated yet, cannot fetch agents
         return

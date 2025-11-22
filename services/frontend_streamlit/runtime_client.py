@@ -20,17 +20,14 @@ class AgentCoreRuntimeClient:
         self,
         runtime_name: str = "customersupport",
         runtime_arn: str | None = None,  # noqa: ARG002 - Deprecated, ignored
-        region: str = "us-east-1",
     ):
         """Initialize the runtime client.
 
         Args:
             runtime_name: Name of the AgentCore runtime
             runtime_arn: Ignored (Gateway handles resolution)
-            region: AWS region
         """
         self.runtime_name = runtime_name
-        self.region = region
         logger.info(f"Initialized runtime client for agent: {runtime_name}")
 
     def invoke_agent(
