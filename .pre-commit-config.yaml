@@ -61,13 +61,3 @@ repos:
           - types-requests
         files: ^(packages|agents/customer-support)/.*\.py$
         exclude: ^agents/global-tools/
-
-  # Run pytest tests
-  - repo: local
-    hooks:
-      - id: pytest
-        name: pytest
-        entry: bash -c 'cd /Users/kornienkoal/projects/bedrock-agentcore-infra-template && uv run pytest tests/ -v --tb=short -x'
-        language: system
-        pass_filenames: false
-        files: ^(tests/|packages/|agents/|services/frontend_streamlit/|services/frontend_gateway/).*\.py$

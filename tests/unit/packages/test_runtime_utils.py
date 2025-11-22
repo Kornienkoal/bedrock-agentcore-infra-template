@@ -118,8 +118,7 @@ class TestAgentRuntime:
             runtime = AgentRuntime("test-agent")
             invoke = runtime.create_invoke_handler([test_tool])
 
-            result = await invoke({"prompt": "test question"})
-
+            result = await invoke({"prompt": "test question"}, context=MagicMock())
             assert "test question" in result
 
     @pytest.mark.asyncio
@@ -155,7 +154,6 @@ class TestAgentRuntime:
             invoke = runtime.create_invoke_handler([test_tool])
 
             await invoke({"prompt": "test"}, context=MagicMock())
-
             # MCP client should have been called
             mock_mcp_client.list_tools_sync.assert_called_once()
 
