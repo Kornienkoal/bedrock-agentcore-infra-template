@@ -19,13 +19,11 @@ class AgentCoreRuntimeClient:
     def __init__(
         self,
         runtime_name: str = "customersupport",
-        runtime_arn: str | None = None,  # noqa: ARG002 - Deprecated, ignored
     ):
         """Initialize the runtime client.
 
         Args:
             runtime_name: Name of the AgentCore runtime
-            runtime_arn: Ignored (Gateway handles resolution)
         """
         self.runtime_name = runtime_name
         logger.info(f"Initialized runtime client for agent: {runtime_name}")

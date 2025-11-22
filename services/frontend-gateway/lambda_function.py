@@ -5,6 +5,7 @@ from functools import lru_cache
 
 import boto3
 from auth import validate_token
+from botocore.exceptions import ClientError
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -136,7 +137,7 @@ def invoke_agent(agent_id, body, user_id):
     except json.JSONDecodeError as e:
         logger.error(f"Invalid JSON in request body: {e}")
         return error_response(400, "Bad Request", "Invalid JSON in request body")
-    except runtime_client.exceptions.ClientError as e:
+    except ClientError as e:
         logger.error(f"AWS client error during invocation: {e}")
         return error_response(502, "Bad Gateway", "Failed to invoke agent")
     except Exception as e:
@@ -144,7 +145,7 @@ def invoke_agent(agent_id, body, user_id):
         return error_response(502, "Bad Gateway", "Internal server error")
 
 
-def lambda_handler(event, context):  # noqa: ARG001
+def lambda_handler(event, _context):
     """
     Frontend Gateway Lambda Handler.
     Routes requests to appropriate handlers based on path and method.
@@ -163,7 +164,9 @@ def lambda_handler(event, context):  # noqa: ARG001
     # Validate Authorization header format
     parts = auth_header.split(" ")
     if len(parts) != 2 or parts[0].lower() != "bearer":
-        logger.error(f"Malformed Authorization header: {auth_header}")
+        logger.error(
+            f"Malformed Authorization header format. Expected 'Bearer <token>' but got {len(parts)} parts"
+        )
         return error_response(
             401, "Unauthorized", "Malformed Authorization header. Expected format: 'Bearer <token>'"
         )

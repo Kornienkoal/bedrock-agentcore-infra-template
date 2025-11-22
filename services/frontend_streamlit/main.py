@@ -88,12 +88,18 @@ AVAILABLE_AGENTS = [
 
 
 @st.cache_data(ttl=300)
-def fetch_agents(user_id: str, access_token: str) -> list[dict]:  # noqa: ARG001
+def fetch_agents(
+    access_token: str,
+    user_id: str,  # noqa: ARG001 - Used as cache key to scope by user
+) -> list[dict[str, str]]:
     """Fetch available agents from the Frontend Gateway.
 
+    Note: access_token and user_id are both cache key parameters. Using user_id
+    instead of access_token alone prevents memory bloat when tokens are refreshed.
+
     Args:
-        user_id: User identifier for cache keying (prevents memory bloat on token refresh)
         access_token: JWT token for authentication
+        user_id: User identifier for cache keying (not used in function body)
 
     Returns:
         List of available agent dictionaries
@@ -157,9 +163,10 @@ def render_agent_selector() -> None:
     with st.sidebar:
         st.markdown("### Agent Selection")
 
-        agent_options = {
-            agent["id"]: f"{agent['name']} - {agent.get('description', '')}" for agent in agents
-        }
+        agent_options = {}
+        for agent in agents:
+            description = agent.get("description") or f"Agent {agent['name']}"
+            agent_options[agent["id"]] = f"{agent['name']} - {description}"
 
         selected = st.selectbox(
             "Choose an agent:",
