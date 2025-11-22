@@ -138,7 +138,7 @@ def render_agent_selector() -> None:
     if LOCAL_MODE:
         agents = AVAILABLE_AGENTS
     elif state.authenticated and state.id_token:
-        agents = fetch_agents(state.user_id or "unknown", state.id_token)
+        agents = fetch_agents(state.id_token, state.user_id or "unknown")
     else:
         # Not authenticated yet, cannot fetch agents
         return
