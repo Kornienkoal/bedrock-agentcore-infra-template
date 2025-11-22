@@ -100,6 +100,7 @@ class TestAgentRuntime:
             assert callable(invoke)
 
     @pytest.mark.asyncio
+    @pytest.mark.skip_precommit
     async def test_invoke_handler_basic_flow(self, mock_config):
         """Invoke handler should process basic requests."""
         from agentcore_tools.runtime import AgentRuntime
@@ -122,6 +123,7 @@ class TestAgentRuntime:
             assert "test question" in result
 
     @pytest.mark.asyncio
+    @pytest.mark.skip_precommit
     async def test_invoke_handler_with_gateway(self, mock_config):
         """Invoke handler should load gateway tools when available."""
         from agentcore_tools.runtime import AgentRuntime
