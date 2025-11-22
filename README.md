@@ -1,10 +1,10 @@
-# Amazon Bedrock AgentCore Template 🚀
+# AWS AgentCore Enterprise Toolkit 🚀
 
-Production-ready, agent-agnostic foundation for Amazon Bedrock AgentCore. Keep the shared infrastructure stable and reuse it across many agents; focus your time on prompts, tools, and UX.
+Production-ready, enterprise-grade infrastructure toolkit for Amazon Bedrock AgentCore. Keep the shared infrastructure stable and reuse it across many agents; focus your time on prompts, tools, and UX.
 
 ## Purpose
 
-This template gives teams a production-ready, agent-agnostic foundation for Amazon Bedrock AgentCore so you can:
+This enterprise toolkit provides teams with a production-ready, agent-agnostic foundation for Amazon Bedrock AgentCore so you can:
 
 - Reuse one shared, AWS-native infrastructure across unlimited agents
 - Start new proofs of concept in minutes with a clean, two-phase workflow (Terraform infra → agent code)

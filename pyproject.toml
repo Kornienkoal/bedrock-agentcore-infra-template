@@ -1,10 +1,10 @@
-# Amazon Bedrock AgentCore Template - Workspace Root
-# UV workspace configuration for multi-agent projects
+# AWS AgentCore Enterprise Toolkit - Workspace Root
+# UV workspace configuration for multi-agent enterprise projects
 
 [project]
-name = "bedrock-agentcore-template"
+name = "aws-agentcore-enterprise-toolkit"
 version = "0.1.0"
-description = "Production-ready template for building Amazon Bedrock AgentCore agents"
+description = "Enterprise-grade infrastructure toolkit for building Amazon Bedrock AgentCore agents"
 readme = "README.md"
 requires-python = ">=3.13"
 license = { text = "Apache-2.0" }

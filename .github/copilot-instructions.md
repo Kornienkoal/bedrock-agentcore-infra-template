@@ -1,4 +1,4 @@
-# GitHub Copilot Instructions — Bedrock AgentCore Template
+# GitHub Copilot Instructions — AWS AgentCore Enterprise Toolkit
 
 Purpose: Give AI coding agents the minimum, project‑specific context to be productive in this repository. Keep answers concrete, scoped to this codebase, and bias to AWS‑native + Terraform.
 

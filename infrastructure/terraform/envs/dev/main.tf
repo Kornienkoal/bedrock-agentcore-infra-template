@@ -25,7 +25,7 @@ provider "aws" {
   default_tags {
     tags = {
       Environment = "dev"
-      Project     = "AgentCore"
+      Project     = "AWS AgentCore Enterprise Toolkit"
       ManagedBy   = "Terraform"
     }
   }
@@ -36,7 +36,7 @@ locals {
   environment = "dev"
   tags = {
     Environment = local.environment
-    Project     = "AgentCore"
+    Project     = "AWS AgentCore Enterprise Toolkit"
     ManagedBy   = "Terraform"
   }
 }
