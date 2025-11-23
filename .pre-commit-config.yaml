@@ -59,8 +59,7 @@ repos:
           - boto3-stubs
           - types-pyyaml
           - types-requests
-        files: ^(packages|agents/customer-support)/.*\.py$
-        exclude: ^agents/global-tools/
+        files: ^packages/.*\.py$
 
   # Run pytest tests (excluding problematic async tests)
   - repo: local
