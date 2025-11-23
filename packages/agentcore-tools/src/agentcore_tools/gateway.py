@@ -54,5 +54,6 @@ def load_gateway_tools(
 
     with create_mcp_client(gateway_url, authorization_header) as client:
         tools = client.list_tools_sync()
+        # Explicit type annotation required by mypy to avoid no-any-return error
         filtered: list[Any] = filter_tools_by_allowed(tools, gateway_cfg, logger)
         return filtered
