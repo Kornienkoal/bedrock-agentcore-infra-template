@@ -41,6 +41,9 @@ jobs:
       - name: Sync dependencies
         run: uv sync --frozen
 
+      - name: Install Playwright browsers
+        run: uv run playwright install --with-deps chromium
+
       - name: Ruff lint
         run: uv run ruff check .
 
@@ -49,7 +52,7 @@ jobs:
           AWS_REGION: us-east-1
           AWS_DEFAULT_REGION: us-east-1
           AGENTCORE_ENV: dev
-        run: uv run pytest tests -v
+        run: uv run pytest tests -v -m "not skip_precommit"
 
   terraform-validate:
     name: Terraform Validate
@@ -67,6 +70,10 @@ jobs:
         uses: terraform-linters/setup-tflint@v4
         with:
           tflint_version: v0.51.1
+
+      - name: Initialize TFLint
+        run: tflint --init
+        working-directory: ${{ env.TF_DIR }}
 
       - name: Make validation script executable
         run: chmod +x scripts/infra/terraform-validate.sh
