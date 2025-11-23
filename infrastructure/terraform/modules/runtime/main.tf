@@ -4,7 +4,7 @@
 # Implements: FR-001 (runtime component), FR-007 (least privilege), Constitution IV (per-agent role)
 
 terraform {
-  required_version = ">= 1.9.0"
+  required_version = ">= 1.9.5"
 
   required_providers {
     aws = {

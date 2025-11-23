@@ -6,7 +6,7 @@
 # Reference: research.md D1 (Terraform and Provider Versions)
 
 terraform {
-  required_version = ">= 1.9.0"
+  required_version = ">= 1.9.5"
 
   required_providers {
     aws = {
