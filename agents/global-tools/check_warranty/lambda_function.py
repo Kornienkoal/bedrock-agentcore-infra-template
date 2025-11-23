@@ -1,13 +1,25 @@
 import json
 import logging
 from datetime import datetime
+from typing import Any, TypedDict
 
 # Configure structured logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # Mock warranty database
-WARRANTY_DB = {
+
+
+class WarrantyRecord(TypedDict):
+    product_id: str
+    product_name: str
+    purchase_date: str
+    warranty_months: int
+    warranty_type: str
+    expires: str
+
+
+WARRANTY_DB: dict[str, WarrantyRecord] = {
     "laptop-x1": {
         "product_id": "laptop-x1",
         "product_name": "Professional Laptop X1",
@@ -35,36 +47,40 @@ WARRANTY_DB = {
 }
 
 
-def handler(event, context):  # noqa: ARG001
+def handler(event: dict[str, Any] | None, context: Any) -> dict[str, Any]:  # noqa: ARG001
     """
     Check warranty status and coverage for a product.
 
     This is a global MCP tool deployed to AgentCore Gateway.
     Available to all agents via Gateway Target.
     """
+    payload: dict[str, Any] = event or {}
+
     # Log invocation for debugging
+    request_id = getattr(context, "aws_request_id", "unknown")
     logger.info(
         json.dumps(
             {
                 "tool": "check_warranty",
-                "request_id": context.aws_request_id,
-                "event_keys": list(event.keys()) if isinstance(event, dict) else "not_dict",
-                "has_body": "body" in event if isinstance(event, dict) else False,
-                "event_type": type(event).__name__,
+                "request_id": request_id,
+                "event_keys": list(payload.keys()),
+                "has_body": "body" in payload,
+                "event_type": type(payload).__name__,
             }
         )
     )
 
     try:
         # Parse input - handle both API Gateway and direct invocation formats
-        if isinstance(event.get("body"), str):
-            body = json.loads(event["body"])
-        elif isinstance(event.get("body"), dict):
-            body = event["body"]
+        raw_body = payload.get("body")
+        if isinstance(raw_body, str):
+            body: dict[str, Any] = json.loads(raw_body)
+        elif isinstance(raw_body, dict):
+            body = raw_body
         else:
-            body = event
-        product_id = body.get("product_id", "")
-        user_id = body.get("user_id", "unknown")
+            body = payload
+        product_id = str(body.get("product_id", ""))
+        user_id = str(body.get("user_id", "unknown"))
 
         logger.info(json.dumps({"action": "warranty_lookup", "product_id": product_id}))
 

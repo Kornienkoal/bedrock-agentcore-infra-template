@@ -261,7 +261,8 @@ class AgentRuntime:
 
         # Extract response text safely
         try:
-            return response.message["content"][0]["text"]  # type: ignore[no-any-return]
+            result: str = response.message["content"][0]["text"]
+            return result
         except (KeyError, IndexError, TypeError) as e:
             logger.error(f"Unexpected response structure: {response}")
             raise RuntimeError(f"Failed to extract response text: {e}") from e
