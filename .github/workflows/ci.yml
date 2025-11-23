@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - feature/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.13"
+  TF_DIR: infrastructure/terraform
+
+jobs:
+  python-quality:
+    name: Lint & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+
+      - name: Sync dependencies
+        run: uv sync --frozen
+
+      - name: Install Playwright browsers
+        run: uv run playwright install --with-deps chromium
+
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Run tests
+        env:
+          AWS_REGION: us-east-1
+          AWS_DEFAULT_REGION: us-east-1
+          AGENTCORE_ENV: dev
+        run: uv run pytest tests -v -m "not skip_precommit"
+
+  terraform-validate:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+
+      - name: Set up TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: v0.51.1
+
+      - name: Initialize TFLint
+        run: tflint --init
+        working-directory: ${{ env.TF_DIR }}
+
+      - name: Make validation script executable
+        run: chmod +x scripts/infra/terraform-validate.sh
+
+      - name: Validate Terraform
+        run: ./scripts/infra/terraform-validate.sh ${{ env.TF_DIR }}
