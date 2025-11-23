@@ -5,6 +5,9 @@ import time
 import pytest
 from playwright.sync_api import Page
 
+# Mark all tests in this file to skip in pre-commit hooks (require AWS infrastructure)
+pytestmark = pytest.mark.skip_precommit
+
 
 @pytest.fixture(scope="module")
 def app_url():
