@@ -72,7 +72,7 @@ jobs:
           tflint_version: v0.51.1
 
       - name: Initialize TFLint
-        run: tflint --init
+        run: tflint --init --recursive
         working-directory: ${{ env.TF_DIR }}
 
       - name: Make validation script executable
