@@ -70,4 +70,4 @@ repos:
         entry: uv run pytest tests/ -v --tb=short -x -m "not skip_precommit"
         language: system
         pass_filenames: false
-        always_run: true
+        files: \.py$
