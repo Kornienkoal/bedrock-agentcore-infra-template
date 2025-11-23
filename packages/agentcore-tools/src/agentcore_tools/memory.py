@@ -8,11 +8,10 @@ Amazon Bedrock AgentCore Memory using bedrock_agentcore.memory.MemoryClient.
 from __future__ import annotations
 
 import logging
-from typing import cast
 
 from bedrock_agentcore.memory import MemoryClient as AcMemoryClient
 from strands.hooks.events import AfterInvocationEvent, MessageAddedEvent
-from strands.hooks.registry import HookCallback, HookProvider, HookRegistry
+from strands.hooks.registry import HookProvider, HookRegistry
 
 
 class MemoryHooks(HookProvider):
@@ -41,10 +40,7 @@ class MemoryHooks(HookProvider):
         # Collect messages as they are added to the agent conversation
         registry.add_callback(MessageAddedEvent, self._on_message)
         # When invocation completes, persist the collected messages as a single event
-        registry.add_callback(
-            AfterInvocationEvent,
-            cast(HookCallback[AfterInvocationEvent], self._on_after_invocation),
-        )
+        registry.add_callback(AfterInvocationEvent, self._on_after_invocation)
 
     def _on_message(self, event: MessageAddedEvent) -> None:
         # Extract plain text from the message content blocks
