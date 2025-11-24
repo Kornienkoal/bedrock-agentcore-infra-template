@@ -17,9 +17,9 @@ variable "enable_knowledge_base" {
 }
 
 variable "embedding_model_arn" {
-  description = "ARN of embedding model for knowledge base"
+  description = "Optional ARN override for embedding model"
   type        = string
-  default     = "arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-embed-text-v1"
+  default     = ""
 }
 
 variable "embedding_model" {

@@ -59,8 +59,7 @@ repos:
           - boto3-stubs
           - types-pyyaml
           - types-requests
-        files: ^(packages|agents/customer-support)/.*\.py$
-        exclude: ^agents/global-tools/
+        files: ^packages/.*\.py$
 
   # Run pytest tests (excluding problematic async tests)
   - repo: local
@@ -70,4 +69,4 @@ repos:
         entry: uv run pytest tests/ -v --tb=short -x -m "not skip_precommit"
         language: system
         pass_filenames: false
-        always_run: true
+        files: \.py$

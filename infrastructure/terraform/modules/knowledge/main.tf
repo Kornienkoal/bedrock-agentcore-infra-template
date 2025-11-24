@@ -10,6 +10,8 @@
 #       See: https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-vectors.html
 
 terraform {
+  required_version = ">= 1.9.5"
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -133,6 +135,10 @@ resource "aws_iam_role" "knowledge_base" {
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
+locals {
+  resolved_embedding_model_arn = var.embedding_model_arn != "" ? var.embedding_model_arn : "arn:aws:bedrock:${data.aws_region.current.name}::foundation-model/${var.embedding_model}"
+}
+
 resource "aws_iam_role_policy" "knowledge_base_s3" {
   count = var.enable_knowledge_base ? 1 : 0
   role  = aws_iam_role.knowledge_base[0].id
@@ -188,7 +194,7 @@ resource "aws_iam_role_policy" "knowledge_base_bedrock" {
           "bedrock:InvokeModel"
         ]
         Resource = [
-          "arn:aws:bedrock:${data.aws_region.current.name}::foundation-model/${var.embedding_model}"
+          local.resolved_embedding_model_arn
         ]
       }
     ]
@@ -205,7 +211,7 @@ resource "aws_bedrockagent_knowledge_base" "this" {
   knowledge_base_configuration {
     type = "VECTOR"
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:aws:bedrock:${data.aws_region.current.name}::foundation-model/${var.embedding_model}"
+      embedding_model_arn = local.resolved_embedding_model_arn
     }
   }
 

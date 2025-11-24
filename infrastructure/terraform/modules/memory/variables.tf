@@ -50,6 +50,17 @@ variable "event_expiry_days" {
   }
 }
 
+variable "short_term_ttl_seconds" {
+  description = "Time-to-live (seconds) for short-term memory strategy"
+  type        = number
+  default     = 3600
+
+  validation {
+    condition     = var.short_term_ttl_seconds > 0
+    error_message = "Short-term TTL must be positive"
+  }
+}
+
 variable "long_term_retention" {
   description = "Retention policy for long-term memory (INDEFINITE or custom)"
   type        = string

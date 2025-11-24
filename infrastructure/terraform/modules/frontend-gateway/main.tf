@@ -1,4 +1,6 @@
 terraform {
+  required_version = ">= 1.9.5"
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -12,6 +14,13 @@ data "aws_caller_identity" "current" {}
 
 locals {
   name_prefix = "${var.project_name}-frontend-gateway-${var.environment}"
+  base_tags = merge(
+    var.tags,
+    {
+      Environment = var.environment
+      ManagedBy   = "Terraform"
+    }
+  )
 }
 
 # Lambda Function
@@ -30,9 +39,9 @@ module "lambda_function" {
   source_path = "${path.module}/../../../../services/frontend-gateway"
 
   # Build in Docker to ensure linux-compatible dependencies
-  build_in_docker            = true
-  docker_additional_options  = ["--platform=linux/amd64"]
-  hash_extra                 = "linux-amd64"
+  build_in_docker           = true
+  docker_additional_options = ["--platform=linux/amd64"]
+  hash_extra                = "linux-amd64"
 
   environment_variables = {
     LOG_LEVEL               = "INFO"
@@ -71,14 +80,14 @@ module "lambda_function" {
     ]
   })
 
-  tags = var.tags
+  tags = local.base_tags
 }
 
 # API Gateway (HTTP API)
 resource "aws_apigatewayv2_api" "this" {
   name          = local.name_prefix
   protocol_type = "HTTP"
-  tags = merge(var.tags, {
+  tags = merge(local.base_tags, {
     Component = "FrontendGateway"
     AgentCore = "FrontendGateway"
   })
@@ -88,7 +97,7 @@ resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.this.id
   name        = "$default"
   auto_deploy = true
-  tags = merge(var.tags, {
+  tags = merge(local.base_tags, {
     Component = "FrontendGateway"
     AgentCore = "FrontendGateway"
   })
@@ -98,10 +107,10 @@ resource "aws_apigatewayv2_integration" "lambda" {
   api_id           = aws_apigatewayv2_api.this.id
   integration_type = "AWS_PROXY"
 
-  connection_type      = "INTERNET"
-  description          = "Lambda integration"
-  integration_method   = "POST"
-  integration_uri      = module.lambda_function.lambda_function_invoke_arn
+  connection_type        = "INTERNET"
+  description            = "Lambda integration"
+  integration_method     = "POST"
+  integration_uri        = module.lambda_function.lambda_function_invoke_arn
   payload_format_version = "2.0"
 }
 
@@ -124,7 +133,7 @@ resource "aws_ssm_parameter" "api_endpoint" {
   name  = "/agentcore/${var.environment}/frontend-gateway/api_endpoint"
   type  = "String"
   value = aws_apigatewayv2_api.this.api_endpoint
-  tags = merge(var.tags, {
+  tags = merge(local.base_tags, {
     Component = "FrontendGateway"
     AgentCore = "FrontendGateway"
   })

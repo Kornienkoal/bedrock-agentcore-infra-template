@@ -28,7 +28,6 @@ class TestCreateGateway:
         create_event,
         lambda_context,
         mock_bedrock_response,
-        ssm_client,
     ):
         """Test successful gateway creation."""
         # Mock Bedrock client
@@ -46,28 +45,28 @@ class TestCreateGateway:
         mock_ssm.get_parameter.return_value = {"Parameter": {"Value": "test-pool-id"}}
 
         # Patch the getter functions to return mocked clients
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                # Mock cfnresponse
-                with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                    # Patch time.sleep to avoid delays
-                    with patch("time.sleep"):
-                        lambda_module.handler(create_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+            patch("time.sleep"),
+        ):
+            lambda_module.handler(create_event, lambda_context)
 
-                    # Verify Bedrock create_gateway called
-                    mock_bedrock.create_gateway.assert_called_once()
-                    call_args = mock_bedrock.create_gateway.call_args[1]
-                    assert call_args["name"] == "test-gateway"
-                    assert "roleArn" in call_args
+        # Verify Bedrock create_gateway called
+        mock_bedrock.create_gateway.assert_called_once()
+        call_args = mock_bedrock.create_gateway.call_args[1]
+        assert call_args["name"] == "test-gateway"
+        assert "roleArn" in call_args
 
-                    # Verify cfnresponse SUCCESS
-                    mock_cfn_send.assert_called_once()
-                    args = mock_cfn_send.call_args[0]
-                    assert args[2] == "SUCCESS"
-                    assert args[3]["GatewayId"] == "test-gateway-id-12345"
+        # Verify cfnresponse SUCCESS
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "SUCCESS"
+        assert args[3]["GatewayId"] == "test-gateway-id-12345"
 
     def test_create_gateway_bedrock_error(
-        self, lambda_module, create_event, lambda_context, ssm_client
+        self, lambda_module, create_event, lambda_context
     ):
         """Test gateway creation with Bedrock API error."""
         # Mock Bedrock client error
@@ -82,15 +81,17 @@ class TestCreateGateway:
         mock_ssm.get_parameter.return_value = {"Parameter": {"Value": "test-pool-id"}}
 
         # Patch the module-level clients directly
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                    lambda_module.handler(create_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+        ):
+            lambda_module.handler(create_event, lambda_context)
 
-                    # Verify cfnresponse FAILED
-                    mock_cfn_send.assert_called_once()
-                    args = mock_cfn_send.call_args[0]
-                    assert args[2] == "FAILED"
+        # Verify cfnresponse FAILED
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "FAILED"
 
     def test_create_gateway_ssm_parameter_storage(
         self,
@@ -98,7 +99,6 @@ class TestCreateGateway:
         create_event,
         lambda_context,
         mock_bedrock_response,
-        ssm_client,
     ):
         """Test SSM parameter creation during gateway creation."""
         mock_bedrock = MagicMock()
@@ -118,24 +118,26 @@ class TestCreateGateway:
         ] * 10  # For SSM puts (param doesn't exist)
 
         # Patch the module-level clients directly
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                with patch("lambda_function.cfnresponse.send"):
-                    with patch("time.sleep"):
-                        lambda_module.handler(create_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send"),
+            patch("time.sleep"),
+        ):
+            lambda_module.handler(create_event, lambda_context)
 
-                    # Verify SSM parameter calls
-                    assert mock_ssm.put_parameter.call_count >= 1
-                    calls = mock_ssm.put_parameter.call_args_list
+        # Verify SSM parameter calls
+        assert mock_ssm.put_parameter.call_count >= 1
+        calls = mock_ssm.put_parameter.call_args_list
 
-                    # Check gateway_id parameter
-                    gateway_id_call = next(
-                        (c for c in calls if "/gateway/gateway_id" in c[1]["Name"]),
-                        None,
-                    )
-                    assert gateway_id_call is not None
-                    assert gateway_id_call[1]["Value"] == "test-gateway-id-12345"
-                    assert gateway_id_call[1]["Type"] == "String"
+        # Check gateway_id parameter
+        gateway_id_call = next(
+            (c for c in calls if "/gateway/gateway_id" in c[1]["Name"]),
+            None,
+        )
+        assert gateway_id_call is not None
+        assert gateway_id_call[1]["Value"] == "test-gateway-id-12345"
+        assert gateway_id_call[1]["Type"] == "String"
 
 
 class TestUpdateGateway:
@@ -147,7 +149,6 @@ class TestUpdateGateway:
         update_event,
         lambda_context,
         mock_bedrock_response,
-        ssm_client,
     ):
         """Test successful gateway update."""
         mock_bedrock = MagicMock()
@@ -162,21 +163,23 @@ class TestUpdateGateway:
         mock_ssm.get_parameter.return_value = {"Parameter": {"Value": "test-pool-id"}}
 
         # Patch the module-level clients directly
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                    with patch("time.sleep"):
-                        lambda_module.handler(update_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+            patch("time.sleep"),
+        ):
+            lambda_module.handler(update_event, lambda_context)
 
-                    # Verify Bedrock update_gateway called
-                    mock_bedrock.update_gateway.assert_called_once()
-                    call_args = mock_bedrock.update_gateway.call_args[1]
-                    assert call_args["gatewayIdentifier"] == "test-gateway-id-12345"
+        # Verify Bedrock update_gateway called
+        mock_bedrock.update_gateway.assert_called_once()
+        call_args = mock_bedrock.update_gateway.call_args[1]
+        assert call_args["gatewayIdentifier"] == "test-gateway-id-12345"
 
-                    # Verify cfnresponse SUCCESS
-                    mock_cfn_send.assert_called_once()
-                    args = mock_cfn_send.call_args[0]
-                    assert args[2] == "SUCCESS"
+        # Verify cfnresponse SUCCESS
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "SUCCESS"
 
     def test_update_gateway_idempotent(
         self, lambda_module, update_event, lambda_context, mock_bedrock_response
@@ -196,22 +199,24 @@ class TestUpdateGateway:
         mock_ssm.get_parameter.return_value = {"Parameter": {"Value": "test-pool-id"}}
 
         # Patch the module-level clients directly
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                    lambda_module.handler(update_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+        ):
+            lambda_module.handler(update_event, lambda_context)
 
-                    # Should skip update if properties unchanged
-                    # (implementation detail - may call get_gateway to verify)
-                    mock_cfn_send.assert_called_once()
-                    args = mock_cfn_send.call_args[0]
-                    assert args[2] == "SUCCESS"
+        # Should skip update if properties unchanged
+        # (implementation detail - may call get_gateway to verify)
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "SUCCESS"
 
 
 class TestDeleteGateway:
     """Test DELETE operation."""
 
-    def test_delete_gateway_success(self, lambda_module, delete_event, lambda_context, ssm_client):
+    def test_delete_gateway_success(self, lambda_module, delete_event, lambda_context):
         """Test successful gateway deletion."""
         mock_bedrock = MagicMock()
         mock_bedrock.delete_gateway.return_value = {}
@@ -219,23 +224,23 @@ class TestDeleteGateway:
         mock_ssm = MagicMock()
 
         # Patch the module-level clients directly
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                    lambda_module.handler(delete_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+        ):
+            lambda_module.handler(delete_event, lambda_context)
 
-                    # Verify Bedrock delete_gateway called
-                    mock_bedrock.delete_gateway.assert_called_once_with(
-                        gatewayId="test-gateway-id-12345"
-                    )
+        # Verify Bedrock delete_gateway called
+        mock_bedrock.delete_gateway.assert_called_once_with(gatewayId="test-gateway-id-12345")
 
-                    # Verify SSM parameters deleted
-                    assert mock_ssm.delete_parameter.call_count >= 1
+        # Verify SSM parameters deleted
+        assert mock_ssm.delete_parameter.call_count >= 1
 
-                    # Verify cfnresponse SUCCESS
-                    mock_cfn_send.assert_called_once()
-                    args = mock_cfn_send.call_args[0]
-                    assert args[2] == "SUCCESS"
+        # Verify cfnresponse SUCCESS
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "SUCCESS"
 
     def test_delete_gateway_not_found(self, lambda_module, delete_event, lambda_context):
         """Test gateway deletion when gateway doesn't exist."""
@@ -254,15 +259,17 @@ class TestDeleteGateway:
         mock_ssm = MagicMock()
 
         # Patch the module-level clients directly
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                    lambda_module.handler(delete_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+        ):
+            lambda_module.handler(delete_event, lambda_context)
 
-                    # Should succeed even if gateway not found (idempotent)
-                    mock_cfn_send.assert_called_once()
-                    args = mock_cfn_send.call_args[0]
-                    assert args[2] == "SUCCESS"
+        # Should succeed even if gateway not found (idempotent)
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "SUCCESS"
 
 
 class TestErrorHandling:
@@ -277,15 +284,17 @@ class TestErrorHandling:
         mock_ssm = MagicMock()
 
         # Patch the module-level clients directly
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                    lambda_module.handler(create_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+        ):
+            lambda_module.handler(create_event, lambda_context)
 
-                    # Should send FAILED response
-                    mock_cfn_send.assert_called_once()
-                    args = mock_cfn_send.call_args[0]
-                    assert args[2] == "FAILED"
+        # Should send FAILED response
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "FAILED"
 
     def test_missing_required_properties(self, lambda_module, create_event, lambda_context):
         """Test handling of missing required properties."""
@@ -296,15 +305,17 @@ class TestErrorHandling:
         mock_ssm = MagicMock()
 
         # Patch the module-level clients directly
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                    lambda_module.handler(create_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+        ):
+            lambda_module.handler(create_event, lambda_context)
 
-                    # Should send FAILED response
-                    mock_cfn_send.assert_called_once()
-                    args = mock_cfn_send.call_args[0]
-                    assert args[2] == "FAILED"
+        # Should send FAILED response
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "FAILED"
 
     def test_ssm_parameter_error_handling(
         self, lambda_module, create_event, lambda_context, mock_bedrock_response
@@ -341,13 +352,15 @@ class TestErrorHandling:
         )
 
         # Patch the module-level clients directly
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                    with patch("time.sleep"):
-                        lambda_module.handler(create_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+            patch("time.sleep"),
+        ):
+            lambda_module.handler(create_event, lambda_context)
 
-                    # Should send FAILED if SSM fails
-                    mock_cfn_send.assert_called_once()
-                    args = mock_cfn_send.call_args[0]
-                    assert args[2] == "FAILED"
+        # Should send FAILED if SSM fails
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "FAILED"

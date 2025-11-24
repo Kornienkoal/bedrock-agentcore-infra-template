@@ -43,6 +43,7 @@ def lambda_context():
 @pytest.fixture
 def ssm_client(aws_credentials):
     """Mock SSM client."""
+    _ = aws_credentials
     with mock_aws():
         yield boto3.client("ssm", region_name="us-east-1")
 
@@ -50,5 +51,6 @@ def ssm_client(aws_credentials):
 @pytest.fixture
 def iam_client(aws_credentials):
     """Mock IAM client."""
+    _ = aws_credentials
     with mock_aws():
         yield boto3.client("iam", region_name="us-east-1")

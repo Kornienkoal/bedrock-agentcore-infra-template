@@ -4,10 +4,16 @@
 # Implements: FR-001 (memory component), Constitution I (AWS Native Services First)
 
 terraform {
+  required_version = ">= 1.9.5"
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.62"
+    }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.2"
     }
   }
 }
@@ -24,6 +30,10 @@ module "shared" {
 # Data sources
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
+
+locals {
+  resolved_embedding_model_arn = var.embedding_model_arn != "" ? var.embedding_model_arn : "arn:aws:bedrock:${data.aws_region.current.name}::foundation-model/amazon.titan-embed-*"
+}
 
 # ============================================================================
 # Lambda Custom Resource Provisioner
@@ -112,7 +122,7 @@ resource "aws_iam_role_policy" "provisioner_bedrock" {
         Action = [
           "bedrock:InvokeModel"
         ]
-        Resource = "arn:aws:bedrock:${data.aws_region.current.name}::foundation-model/amazon.titan-embed-*"
+        Resource = local.resolved_embedding_model_arn
       }
     ]
   })
@@ -170,6 +180,11 @@ resource "null_resource" "memory_provisioning" {
     environment          = var.environment
     agent_namespace      = var.agent_namespace
     event_expiry_days    = var.event_expiry_days
+    short_term_ttl       = tostring(var.short_term_ttl_seconds)
+    long_term_retention  = var.long_term_retention
+    embedding_model_arn  = local.resolved_embedding_model_arn
+    max_tokens           = tostring(var.max_tokens)
+    enabled_strategies   = sha1(jsonencode(var.enabled_strategies))
     lambda_version       = module.memory_provisioner_lambda.lambda_function_source_code_hash
     lambda_function_name = module.memory_provisioner_lambda.lambda_function_name
     region               = data.aws_region.current.name
@@ -183,11 +198,16 @@ resource "null_resource" "memory_provisioning" {
         --payload '${jsonencode({
     RequestType = "Create"
     ResourceProperties = {
-      MemoryName      = module.shared.agentcore_name_prefix
-      Environment     = var.environment
-      AgentNamespace  = var.agent_namespace
-      SSMPrefix       = "/agentcore/${var.environment}/memory"
-      EventExpiryDays = var.event_expiry_days
+      MemoryName          = module.shared.agentcore_name_prefix
+      Environment         = var.environment
+      AgentNamespace      = var.agent_namespace
+      SSMPrefix           = "/agentcore/${var.environment}/memory"
+      EventExpiryDays     = var.event_expiry_days
+      ShortTermTTLSeconds = var.short_term_ttl_seconds
+      LongTermRetention   = var.long_term_retention
+      EnabledStrategies   = var.enabled_strategies
+      EmbeddingModelArn   = local.resolved_embedding_model_arn
+      MaxTokens           = var.max_tokens
     }
     StackId           = "terraform-${var.agent_namespace}-${var.environment}"
     RequestId         = "terraform-memory-${formatdate("YYYYMMDDhhmmss", timestamp())}"

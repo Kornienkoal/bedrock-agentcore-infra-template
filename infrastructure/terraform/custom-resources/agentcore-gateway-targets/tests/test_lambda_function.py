@@ -28,29 +28,31 @@ def test_create_targets_success(lambda_module, create_event, lambda_context, ssm
         {"targetId": "t-2"},
     ]
 
-    with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-        with patch.object(lambda_module, "get_ssm_client", return_value=ssm_client):
-            with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                lambda_module.handler(create_event, lambda_context)
+    with (
+        patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+        patch.object(lambda_module, "get_ssm_client", return_value=ssm_client),
+        patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+    ):
+        lambda_module.handler(create_event, lambda_context)
 
-                # Two creates
-                assert mock_bedrock.create_gateway_target.call_count == 2
+        # Two creates
+        assert mock_bedrock.create_gateway_target.call_count == 2
 
-                first_call_kwargs = mock_bedrock.create_gateway_target.call_args_list[0][1]
-                assert first_call_kwargs["credentialProviderConfigurations"] == [
-                    {"credentialProviderType": "GATEWAY_IAM_ROLE"}
-                ]
-                schema_payload = first_call_kwargs["targetConfiguration"]["mcp"]["lambda"][
-                    "toolSchema"
-                ]
-                assert "inlinePayload" in schema_payload
-                assert schema_payload["inlinePayload"][0]["name"] == "check-warranty-status"
+        first_call_kwargs = mock_bedrock.create_gateway_target.call_args_list[0][1]
+        assert first_call_kwargs["credentialProviderConfigurations"] == [
+            {"credentialProviderType": "GATEWAY_IAM_ROLE"}
+        ]
+        schema_payload = first_call_kwargs["targetConfiguration"]["mcp"]["lambda"][
+            "toolSchema"
+        ]
+        assert "inlinePayload" in schema_payload
+        assert schema_payload["inlinePayload"][0]["name"] == "check-warranty-status"
 
-                # SUCCESS response
-                mock_cfn_send.assert_called_once()
-                args = mock_cfn_send.call_args[0]
-                assert args[2] == "SUCCESS"
-                assert args[3]["Created"] == 2
+        # SUCCESS response
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "SUCCESS"
+        assert args[3]["Created"] == 2
 
 
 def test_update_targets_change(lambda_module, update_event, lambda_context, ssm_client):
@@ -121,21 +123,23 @@ def test_update_targets_change(lambda_module, update_event, lambda_context, ssm_
         },
     ]
 
-    with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-        with patch.object(lambda_module, "get_ssm_client", return_value=ssm_client):
-            with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                lambda_module.handler(update_event, lambda_context)
+    with (
+        patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+        patch.object(lambda_module, "get_ssm_client", return_value=ssm_client),
+        patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+    ):
+        lambda_module.handler(update_event, lambda_context)
 
-                assert mock_bedrock.update_gateway_target.call_count == 2
-                first_update_kwargs = mock_bedrock.update_gateway_target.call_args_list[0][1]
-                assert first_update_kwargs["targetId"] == "t-1"
-                assert first_update_kwargs["credentialProviderConfigurations"] == [
-                    {"credentialProviderType": "GATEWAY_IAM_ROLE"}
-                ]
-                mock_cfn_send.assert_called_once()
-                args = mock_cfn_send.call_args[0]
-                assert args[2] == "SUCCESS"
-                assert args[3]["Updated"] == 2
+        assert mock_bedrock.update_gateway_target.call_count == 2
+        first_update_kwargs = mock_bedrock.update_gateway_target.call_args_list[0][1]
+        assert first_update_kwargs["targetId"] == "t-1"
+        assert first_update_kwargs["credentialProviderConfigurations"] == [
+            {"credentialProviderType": "GATEWAY_IAM_ROLE"}
+        ]
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "SUCCESS"
+        assert args[3]["Updated"] == 2
 
 
 def test_delete_targets_success(lambda_module, delete_event, lambda_context, ssm_client):
@@ -151,18 +155,20 @@ def test_delete_targets_success(lambda_module, delete_event, lambda_context, ssm
         }
     ]
 
-    with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-        with patch.object(lambda_module, "get_ssm_client", return_value=ssm_client):
-            with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                lambda_module.handler(delete_event, lambda_context)
+    with (
+        patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+        patch.object(lambda_module, "get_ssm_client", return_value=ssm_client),
+        patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+    ):
+        lambda_module.handler(delete_event, lambda_context)
 
-                assert mock_bedrock.delete_gateway_target.call_count == 2
-                first_delete_kwargs = mock_bedrock.delete_gateway_target.call_args_list[0][1]
-                assert first_delete_kwargs["targetId"] == "t-1"
-                mock_cfn_send.assert_called_once()
-                args = mock_cfn_send.call_args[0]
-                assert args[2] == "SUCCESS"
-                assert args[3]["Deleted"] == 2
+        assert mock_bedrock.delete_gateway_target.call_count == 2
+        first_delete_kwargs = mock_bedrock.delete_gateway_target.call_args_list[0][1]
+        assert first_delete_kwargs["targetId"] == "t-1"
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "SUCCESS"
+        assert args[3]["Deleted"] == 2
 
 
 def test_invalid_request_type(lambda_module, create_event, lambda_context, ssm_client):
@@ -171,11 +177,13 @@ def test_invalid_request_type(lambda_module, create_event, lambda_context, ssm_c
 
     mock_bedrock = MagicMock()
 
-    with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-        with patch.object(lambda_module, "get_ssm_client", return_value=ssm_client):
-            with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                lambda_module.handler(create_event, lambda_context)
+    with (
+        patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+        patch.object(lambda_module, "get_ssm_client", return_value=ssm_client),
+        patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+    ):
+        lambda_module.handler(create_event, lambda_context)
 
-                mock_cfn_send.assert_called_once()
-                args = mock_cfn_send.call_args[0]
-                assert args[2] == "FAILED"
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "FAILED"

@@ -4,10 +4,16 @@
 # Implements: FR-001 (gateway component), Constitution I (AWS Native Services First)
 
 terraform {
+  required_version = ">= 1.9.5"
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.62"
+    }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.2"
     }
   }
 }

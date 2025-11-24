@@ -128,7 +128,6 @@ module "frontend_gateway" {
   source = "../../modules/frontend-gateway"
 
   environment          = local.environment
-  aws_region           = var.aws_region
   cognito_user_pool_id = module.identity.pool_id
   cognito_client_id    = module.identity.frontend_client_id
   tags                 = local.tags

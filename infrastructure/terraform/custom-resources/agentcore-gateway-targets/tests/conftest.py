@@ -15,6 +15,7 @@ from moto import mock_aws
 @pytest.fixture
 def ssm_client(aws_credentials):
     """Mock SSM client with seeded gateway ID."""
+    _ = aws_credentials
     with mock_aws():
         client = boto3.client("ssm", region_name="us-east-1")
         # Seed a gateway ID parameter

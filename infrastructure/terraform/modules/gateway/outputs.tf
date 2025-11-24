@@ -29,12 +29,6 @@ data "aws_ssm_parameter" "invoke_url" {
   depends_on = [null_resource.gateway_provisioning]
 }
 
-data "aws_ssm_parameter" "role_arn" {
-  name = "/agentcore/${var.environment}/gateway/role_arn"
-
-  depends_on = [null_resource.gateway_provisioning]
-}
-
 # Terraform outputs (for module consumers)
 output "gateway_id" {
   description = "Bedrock Gateway ID"

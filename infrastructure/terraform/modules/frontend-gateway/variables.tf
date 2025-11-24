@@ -9,11 +9,6 @@ variable "environment" {
   type        = string
 }
 
-variable "aws_region" {
-  description = "AWS Region"
-  type        = string
-}
-
 variable "cognito_user_pool_id" {
   description = "Cognito User Pool ID for token validation"
   type        = string

@@ -28,7 +28,6 @@ class TestCreateMemory:
         create_event,
         lambda_context,
         mock_bedrock_memory_response,
-        ssm_client,
     ):
         """Test successful memory creation."""
         # Mock Bedrock client
@@ -39,23 +38,24 @@ class TestCreateMemory:
         mock_ssm = MagicMock()
 
         # Patch the module-level clients directly
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                # Mock cfnresponse
-                with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                    lambda_module.handler(create_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+        ):
+            lambda_module.handler(create_event, lambda_context)
 
-                    # Verify Bedrock create_memory called
-                    mock_bedrock.create_memory.assert_called_once()
-                    call_args = mock_bedrock.create_memory.call_args[1]
-                    assert call_args["name"] == "test-memory"
-                    assert "memoryStrategies" in call_args
+        # Verify Bedrock create_memory called
+        mock_bedrock.create_memory.assert_called_once()
+        call_args = mock_bedrock.create_memory.call_args[1]
+        assert call_args["name"] == "test-memory"
+        assert "memoryStrategies" in call_args
 
-                    # Verify cfnresponse SUCCESS
-                    mock_cfn_send.assert_called_once()
-                    args = mock_cfn_send.call_args[0]
-                    assert args[2] == "SUCCESS"
-                    assert args[3]["MemoryId"] == "test-memory-id-12345"
+        # Verify cfnresponse SUCCESS
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "SUCCESS"
+        assert args[3]["MemoryId"] == "test-memory-id-12345"
 
     def test_create_memory_with_multiple_strategies(
         self, lambda_module, create_event, lambda_context, mock_bedrock_memory_response
@@ -68,20 +68,22 @@ class TestCreateMemory:
         mock_ssm = MagicMock()
 
         # Patch the getter functions to return mocked clients
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                with patch("lambda_function.cfnresponse.send"):
-                    lambda_module.handler(create_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send"),
+        ):
+            lambda_module.handler(create_event, lambda_context)
 
-                    # Verify strategies passed correctly (Lambda builds nested structure)
-                    call_args = mock_bedrock.create_memory.call_args[1]
-                    strategies = call_args["memoryStrategies"]
-                    assert len(strategies) == 2
-                    assert "userPreferenceMemoryStrategy" in strategies[0]
-                    assert "semanticMemoryStrategy" in strategies[1]
+        # Verify strategies passed correctly (Lambda builds nested structure)
+        call_args = mock_bedrock.create_memory.call_args[1]
+        strategies = call_args["memoryStrategies"]
+        assert len(strategies) == 2
+        assert "userPreferenceMemoryStrategy" in strategies[0]
+        assert "semanticMemoryStrategy" in strategies[1]
 
     def test_create_memory_bedrock_error(
-        self, lambda_module, create_event, lambda_context, ssm_client
+        self, lambda_module, create_event, lambda_context
     ):
         """Test memory creation with Bedrock API error."""
         # Mock Bedrock client error
@@ -100,15 +102,17 @@ class TestCreateMemory:
         mock_ssm = MagicMock()
 
         # Patch the module-level clients directly
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                    lambda_module.handler(create_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+        ):
+            lambda_module.handler(create_event, lambda_context)
 
-                    # Verify cfnresponse FAILED
-                    mock_cfn_send.assert_called_once()
-                    args = mock_cfn_send.call_args[0]
-                    assert args[2] == "FAILED"
+        # Verify cfnresponse FAILED
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "FAILED"
 
     def test_create_memory_ssm_parameter_storage(
         self,
@@ -116,7 +120,6 @@ class TestCreateMemory:
         create_event,
         lambda_context,
         mock_bedrock_memory_response,
-        ssm_client,
     ):
         """Test SSM parameter creation during memory creation."""
         mock_bedrock = MagicMock()
@@ -125,22 +128,22 @@ class TestCreateMemory:
         mock_ssm = MagicMock()
 
         # Patch the getter functions to return mocked clients
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                with patch("lambda_function.cfnresponse.send"):
-                    lambda_module.handler(create_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send"),
+        ):
+            lambda_module.handler(create_event, lambda_context)
 
-                    # Verify SSM parameter calls
-                    assert mock_ssm.put_parameter.call_count >= 1
-                    calls = mock_ssm.put_parameter.call_args_list
+        # Verify SSM parameter calls
+        assert mock_ssm.put_parameter.call_count >= 1
+        calls = mock_ssm.put_parameter.call_args_list
 
-                    # Check memory_id parameter
-                    memory_id_call = next(
-                        (c for c in calls if "/memory/memory_id" in c[1]["Name"]), None
-                    )
-                    assert memory_id_call is not None
-                    assert memory_id_call[1]["Value"] == "test-memory-id-12345"
-                    assert memory_id_call[1]["Type"] == "String"
+        # Check memory_id parameter
+        memory_id_call = next((c for c in calls if "/memory/memory_id" in c[1]["Name"]), None)
+        assert memory_id_call is not None
+        assert memory_id_call[1]["Value"] == "test-memory-id-12345"
+        assert memory_id_call[1]["Type"] == "String"
 
 
 class TestUpdateMemory:
@@ -152,7 +155,6 @@ class TestUpdateMemory:
         update_event,
         lambda_context,
         mock_bedrock_memory_response,
-        ssm_client,
     ):
         """Test successful memory update."""
         mock_bedrock = MagicMock()
@@ -162,15 +164,17 @@ class TestUpdateMemory:
         mock_ssm = MagicMock()
 
         # Patch the getter functions to return mocked clients
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                    lambda_module.handler(update_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+        ):
+            lambda_module.handler(update_event, lambda_context)
 
-                    # Verify cfnresponse SUCCESS
-                    mock_cfn_send.assert_called_once()
-                    args = mock_cfn_send.call_args[0]
-                    assert args[2] == "SUCCESS"
+        # Verify cfnresponse SUCCESS
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "SUCCESS"
 
     def test_update_memory_strategy_changes(
         self, lambda_module, update_event, lambda_context, mock_bedrock_memory_response
@@ -183,21 +187,23 @@ class TestUpdateMemory:
         mock_ssm = MagicMock()
 
         # Patch the getter functions to return mocked clients
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                    lambda_module.handler(update_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+        ):
+            lambda_module.handler(update_event, lambda_context)
 
-                    # Verify cfnresponse SUCCESS
-                    mock_cfn_send.assert_called_once()
-                    args = mock_cfn_send.call_args[0]
-                    assert args[2] == "SUCCESS"
+        # Verify cfnresponse SUCCESS
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "SUCCESS"
 
 
 class TestDeleteMemory:
     """Test DELETE operation."""
 
-    def test_delete_memory_success(self, lambda_module, delete_event, lambda_context, ssm_client):
+    def test_delete_memory_success(self, lambda_module, delete_event, lambda_context):
         """Test successful memory deletion."""
         mock_bedrock = MagicMock()
         mock_bedrock.delete_memory.return_value = {}
@@ -205,23 +211,23 @@ class TestDeleteMemory:
         mock_ssm = MagicMock()
 
         # Patch the getter functions to return mocked clients
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                    lambda_module.handler(delete_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+        ):
+            lambda_module.handler(delete_event, lambda_context)
 
-                    # Verify Bedrock delete_memory called
-                    mock_bedrock.delete_memory.assert_called_once_with(
-                        memoryId="test-memory-id-12345"
-                    )
+        # Verify Bedrock delete_memory called
+        mock_bedrock.delete_memory.assert_called_once_with(memoryId="test-memory-id-12345")
 
-                    # Verify SSM parameters deleted
-                    assert mock_ssm.delete_parameter.call_count >= 1
+        # Verify SSM parameters deleted
+        assert mock_ssm.delete_parameter.call_count >= 1
 
-                    # Verify cfnresponse SUCCESS
-                    mock_cfn_send.assert_called_once()
-                    args = mock_cfn_send.call_args[0]
-                    assert args[2] == "SUCCESS"
+        # Verify cfnresponse SUCCESS
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "SUCCESS"
 
     def test_delete_memory_not_found(self, lambda_module, delete_event, lambda_context):
         """Test memory deletion when memory doesn't exist."""
@@ -295,12 +301,14 @@ class TestErrorHandling:
         mock_ssm = MagicMock()
 
         # Patch the getter functions to return mocked clients
-        with patch.object(lambda_module, "get_control_client", return_value=mock_bedrock):
-            with patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm):
-                with patch("lambda_function.cfnresponse.send") as mock_cfn_send:
-                    lambda_module.handler(create_event, lambda_context)
+        with (
+            patch.object(lambda_module, "get_control_client", return_value=mock_bedrock),
+            patch.object(lambda_module, "get_ssm_client", return_value=mock_ssm),
+            patch("lambda_function.cfnresponse.send") as mock_cfn_send,
+        ):
+            lambda_module.handler(create_event, lambda_context)
 
-                    # Should send FAILED response
-                    mock_cfn_send.assert_called_once()
-                    args = mock_cfn_send.call_args[0]
-                    assert args[2] == "FAILED"
+        # Should send FAILED response
+        mock_cfn_send.assert_called_once()
+        args = mock_cfn_send.call_args[0]
+        assert args[2] == "FAILED"

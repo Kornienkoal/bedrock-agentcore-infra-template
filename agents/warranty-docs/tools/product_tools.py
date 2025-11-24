@@ -4,13 +4,37 @@ These are agent-specific local tools (not shared via Gateway).
 Focused on warranty use cases: product specs, documentation search.
 """
 
-from typing import Any
+from __future__ import annotations
+
+from typing import Any, TypedDict, cast
 
 from strands.tools import tool
 
 
+class ProductRecord(TypedDict):
+    product_id: str
+    name: str
+    category: str
+    warranty_months: int
+    specs: dict[str, Any]
+    compatible_accessories: list[str]
+
+
+class DocumentationEntry(TypedDict):
+    doc_id: str
+    title: str
+    category: str
+    excerpt: str
+    relevance_score: float
+    url: str
+
+
+class ScoredDocumentationEntry(DocumentationEntry, total=False):
+    computed_score: float
+
+
 @tool
-def get_product_info(product_id: str) -> dict[str, Any]:
+def get_product_info(product_id: str) -> ProductRecord | dict[str, Any]:
     """
     Retrieve detailed product information including warranty details.
 
@@ -32,7 +56,7 @@ def get_product_info(product_id: str) -> dict[str, Any]:
     """
     # Mock product database
     # In production, this would query a real database or API
-    mock_products = {
+    mock_products: dict[str, ProductRecord] = {
         "laptop-x1": {
             "product_id": "laptop-x1",
             "name": "Professional Laptop X1",
@@ -117,7 +141,7 @@ def search_documentation(query: str, category: str | None = None, limit: int = 5
     """
     # Mock documentation database
     # In production, this would query Knowledge Base via BedrockAgent retrieve API
-    mock_docs = [
+    mock_docs: list[DocumentationEntry] = [
         {
             "doc_id": "doc-w001",
             "title": "Warranty Coverage Overview",
@@ -216,7 +240,7 @@ def search_documentation(query: str, category: str | None = None, limit: int = 5
     query_lower = query.lower()
     query_tokens = set(query_lower.split())
 
-    scored_docs = []
+    scored_docs: list[ScoredDocumentationEntry] = []
     for doc in mock_docs:
         # Start with base relevance score
         score = float(doc["relevance_score"])
@@ -295,7 +319,7 @@ def list_compatible_accessories(product_id: str) -> dict[str, Any]:
         }
     """
     # Mock accessory catalog
-    accessory_catalog = {
+    accessory_catalog: dict[str, dict[str, str]] = {
         "docking-station-pro": {"id": "docking-station-pro", "name": "USB-C Docking Station Pro"},
         "travel-case-14": {"id": "travel-case-14", "name": "14-inch Protective Travel Case"},
         "monitor-arm-dual": {"id": "monitor-arm-dual", "name": "Dual Monitor Desk Arm"},
@@ -306,18 +330,20 @@ def list_compatible_accessories(product_id: str) -> dict[str, Any]:
 
     # Get product info to find compatible accessories
     product_info = get_product_info(product_id)
-    if "error" in product_info:
-        return product_info
+    if isinstance(product_info, dict) and "error" in product_info:
+        return cast(dict[str, Any], product_info)
+
+    typed_product = cast(ProductRecord, product_info)
 
     # Get accessory IDs from product
-    accessory_ids = product_info.get("compatible_accessories", [])
+    accessory_ids: list[str] = typed_product.get("compatible_accessories", [])
     accessories = [
-        accessory_catalog.get(acc_id) for acc_id in accessory_ids if acc_id in accessory_catalog
+        accessory_catalog[acc_id] for acc_id in accessory_ids if acc_id in accessory_catalog
     ]
 
     return {
         "product_id": product_id,
-        "product_name": product_info.get("name"),
+        "product_name": typed_product.get("name"),
         "compatible_accessories": accessories,
         "total_count": len(accessories),
     }
