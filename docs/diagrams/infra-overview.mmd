@@ -8,6 +8,12 @@ graph TD
     FE["Frontend Client (code + PKCE)"]
   end
 
+  subgraph FrontendGW [Frontend Gateway]
+    FEGW["API Gateway (HTTP)"]
+    FELambda["Auth/Proxy Lambda"]
+    FERole["Lambda IAM Role"]
+  end
+
   subgraph Gateway [Bedrock AgentCore Gateway]
     GW[("Gateway")]
     GRole[Gateway IAM Role]
@@ -19,6 +25,7 @@ graph TD
   end
 
   subgraph Runtime [Agent Runtime]
+    RuntimeSvc["AgentCore Runtime"]
     RRole[Execution IAM Role]
     Logs["/CW Log Group/"]
   end
@@ -34,6 +41,11 @@ graph TD
 
   UP --> M2M
   UP --> FE
+  FE -->|JWT| FEGW
+  FEGW --> FELambda
+  FELambda -->|Validate| UP
+  FELambda -->|InvokeAgentRuntime API| RuntimeSvc
+  RuntimeSvc -->|IAM Role| RRole
 
   RRole -->|Invoke| GW
   GW -->|Invoke Tool| T1
@@ -42,14 +54,16 @@ graph TD
   RRole -->|Read| MEM
 
   RRole --> Logs
+  FELambda --> CW
   T1 --> CW
   T2 --> CW
   GW --> CW
 
   RRole --> XR
+  FELambda --> XR
   T1 --> XR
   T2 --> XR
   GW --> XR
 
   classDef aws fill:#f7fbff,stroke:#1f77b4,stroke-width:1px
-  class UP,M2M,FE,GW,GRole,T1,T2,RRole,Logs,MEM,CW,XR aws
+  class UP,M2M,FE,GW,GRole,T1,T2,RuntimeSvc,RRole,Logs,MEM,CW,XR aws

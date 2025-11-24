@@ -10,12 +10,21 @@ flowchart LR
     FE["Frontend Client (PKCE)"]
   end
 
+  subgraph Gateway[Frontend Gateway]
+    APIGW["API Gateway (HTTP)"]
+    Lambda["Auth/Proxy Lambda"]
+  end
+
   subgraph AgentCore[AgentCore]
     RT[Agent Runtime]
   end
 
-  UI -->|"Browser OAuth2 (PKCE)"| Cognito
-  UI -->|AWS SDK| RT
+  UI -->|"OAuth2 (PKCE)"| Cognito
+  Cognito -->|"ID Token (JWT)"| UI
+  UI -->|"Bearer Token (HTTPS)"| APIGW
+  APIGW --> Lambda
+  Lambda -->|"Validate JWT"| UP
+  Lambda -->|"InvokeAgentRuntime API"| RT
 
   classDef aws fill:#f7fbff,stroke:#1f77b4,stroke-width:1px
   class UP,FE,RT aws

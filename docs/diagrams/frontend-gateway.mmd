@@ -4,22 +4,30 @@ flowchart LR
     UI[Streamlit UI]
   end
 
-  subgraph Cognito["Cognito Hosted UI"]
+  subgraph Cognito["Cognito"]
     Pool[(User Pool)]
-    App[Frontend App Client]
+    App[Frontend App Client\nPKCE]
   end
 
-  subgraph Backend["Gateway Service (New Layer)"]
-    GWAPI["AuthN/Z + Agent Proxy\n(IAM Role for AgentCore)"]
+  subgraph FrontendGW["Frontend Gateway"]
+    APIGW["API Gateway\n(HTTP API)"]
+    Lambda["Lambda Handler\nauth.py + lambda_function.py"]
+    Role["Lambda IAM Role"]
   end
 
-  subgraph AgentCore["AWS AgentCore"]
-    Runtime["Agent Runtime(s)"]
-    Control["Control Plane (list/describe)"]
+  subgraph AgentCore["AWS Bedrock AgentCore"]
+    Runtime["Agent Runtime"]
+    Control["Control Plane\n(list_agent_runtimes)"]
   end
 
-  UI -->|OAuth2 + PKCE| Cognito
-  Cognito -->|"ID/Access Tokens (claims: allowed agents)"| UI
-  UI -->|Bearer token| GWAPI
-  GWAPI -->|"SigV4 (IAM role)"| Control
-  GWAPI -->|invoke_agent_runtime| Runtime
+  UI -->|"1. OAuth2 + PKCE"| Cognito
+  Cognito -->|"2. ID Token (JWT)\nclaims: custom:allowed_agents"| UI
+  UI -->|"3. GET /agents\nBearer <id_token>"| APIGW
+  UI -->|"4. POST /agents/{id}/invoke\nBearer <id_token>"| APIGW
+  APIGW --> Lambda
+  Lambda -->|"5. Validate JWT\n(PyJWT + JWKS)"| Pool
+  Lambda -->|"6. Check allowed_agents claim"| Lambda
+  Lambda -->|"7. boto3 + IAM Role"| Control
+  Lambda -->|"8. InvokeAgentRuntime"| Runtime
+  Runtime -->|"9. Response"| Lambda
+  Lambda -->|"10. JSON Response"| UI

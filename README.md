@@ -33,16 +33,19 @@ Tip: The docs index lists all diagrams and stage guides: `docs/README.md`.
 
 ## Architecture
 
-The core flow is simple: the user authenticates in the frontend, calls the shared API, and the AgentCore Runtime orchestrates tools and memory.
+The core flow: users authenticate via Cognito, the Streamlit frontend calls the Frontend Gateway (API Gateway + Lambda) with JWT tokens, and the Gateway validates authorization and proxies requests to AgentCore Runtime.
 
 ```mermaid
 flowchart LR
-	FE["Frontend (Streamlit)"] -->|ID token| APIGW["API Gateway (Cognito Authorizer)"]
-	APIGW --> RUNTIME["AgentCore Runtime (Lambda)"]
-	RUNTIME --> GWT["Gateway (Lambda MCP Tools)"]
-	RUNTIME --> MEM["AgentCore Memory (DynamoDB)"]
-	FE -. "Auth" .-> COG["Cognito User Pool"]
-	RUNTIME -. "Config" .-> SSM["SSM Parameter Store"]
+	FE["Frontend (Streamlit)"] -->|OAuth2 PKCE| COG["Cognito User Pool"]
+	COG -->|JWT Tokens| FE
+	FE -->|Bearer Token| FEGW["Frontend Gateway\n(API GW + Lambda)"]
+	FEGW -->|Validate JWT| COG
+	FEGW -->|"invoke_agent_runtime (boto3)"| RUNTIME["AgentCore Runtime"]
+	RUNTIME --> GWT["AgentCore Gateway\n(MCP Tools)"]
+	RUNTIME --> MEM["AgentCore Memory"]
+	FEGW -. "Config" .-> SSM["SSM Parameter Store"]
+	RUNTIME -. "Config" .-> SSM
 ```
 
 More diagrams (system overview, per-stage components, auth and tool flows) live under `docs/diagrams/` and are linked from each stage README.
